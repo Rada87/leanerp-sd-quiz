@@ -1,0 +1,8 @@
+export const QUESTION_TIME_SECONDS = 30;
+export const MAX_POINTS_PER_QUESTION = 100;
+export const MIN_POINTS_CORRECT = 10;
+export const SCORING_EXPONENT = 0.55;
+export const FEEDBACK_AUTO_ADVANCE_MS = 2000;
+export const KIOSK_IDLE_TIMEOUT_MS = 45_000;
+export const LEADERBOARD_TOP_N = 10;
+export const STORAGE_KEY = "leanerp-quiz-scores";
