@@ -11,11 +11,14 @@ interface Trace {
   segmentLengths: number[];
 }
 
-interface Pad {
+interface Facet {
+  points: [Point, Point, Point];
+}
+
+interface Node {
   x: number;
   y: number;
-  radius: number;
-  isVia: boolean;
+  size: number;
 }
 
 interface Pulse {
@@ -25,15 +28,33 @@ interface Pulse {
   pulseLength: number;
 }
 
-const GRID = 50;
-const COLOR: [number, number, number] = [63, 229, 132];
-const STATIC_ALPHA = 0.15;
-const PAD_ALPHA = 0.22;
+// Škoda emerald palette
+const LINE_COLOR: [number, number, number] = [46, 169, 113]; // #2EA971
+const FACET_COLOR: [number, number, number] = [14, 58, 47]; // #0E3A2F brand emerald
+const NODE_COLOR: [number, number, number] = [70, 200, 140];
+const PULSE_COLOR: [number, number, number] = [120, 250, 174]; // #78FAAE
+
+const STEP = 74;
+const STATIC_ALPHA = 0.16;
+const NODE_ALPHA = 0.22;
+const FACET_ALPHA = 0.16;
 const MAX_PULSES = 4;
 const SPAWN_MIN_MS = 1000;
 const SPAWN_MAX_MS = 2500;
 const DURATION_MIN_S = 4;
 const DURATION_MAX_S = 7;
+
+// Triangular (isometric) lattice — 6 directions at 60° increments.
+const SIN60 = Math.sqrt(3) / 2;
+// Neighbour moves in (i, j) lattice coords.
+const MOVES: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, -1],
+  [-1, 1],
+];
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -43,85 +64,147 @@ function randInt(min: number, max: number) {
   return Math.floor(rand(min, max + 1));
 }
 
-function rgba(r: number, g: number, b: number, a: number) {
-  return `rgba(${r},${g},${b},${a})`;
+function rgba(c: [number, number, number], a: number) {
+  return `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+}
+
+// Convert lattice (i, j) to pixel coordinates.
+function toPixel(i: number, j: number): Point {
+  return { x: STEP * i + STEP * 0.5 * j, y: STEP * SIN60 * j };
 }
 
 function generateLayout(w: number, h: number) {
-  const cols = Math.ceil(w / GRID) + 1;
-  const rows = Math.ceil(h / GRID) + 1;
-  const traces: Trace[] = [];
-  const pads: Pad[] = [];
-  const padKeys = new Set<string>();
-  const count = Math.max(20, Math.floor((cols * rows) / 6));
+  const cols = Math.ceil(w / STEP) + 2;
+  const rows = Math.ceil(h / (STEP * SIN60)) + 2;
 
-  for (let n = 0; n < count; n++) {
-    let cx = randInt(0, cols - 1);
-    let cy = randInt(0, rows - 1);
-    const pts: Point[] = [{ x: cx * GRID, y: cy * GRID }];
-    let horiz = Math.random() > 0.5;
-    const bends = randInt(2, 6);
+  const traces: Trace[] = [];
+  const nodes: Node[] = [];
+  const facets: Facet[] = [];
+  const nodeKeys = new Set<string>();
+
+  const traceCount = Math.max(18, Math.floor((cols * rows) / 7));
+
+  for (let n = 0; n < traceCount; n++) {
+    // Random start on the lattice (offset i to keep x within view as j grows).
+    let j = randInt(0, rows);
+    let i = randInt(-Math.ceil(j / 2), cols);
+    const latticePts: [number, number][] = [[i, j]];
+
+    let moveIdx = randInt(0, MOVES.length - 1);
+    const bends = randInt(3, 7);
 
     for (let b = 0; b < bends; b++) {
-      const steps = randInt(1, 5);
-      const dir = Math.random() > 0.5 ? 1 : -1;
-      if (horiz) {
-        cx = Math.max(0, Math.min(cols - 1, cx + steps * dir));
-      } else {
-        cy = Math.max(0, Math.min(rows - 1, cy + steps * dir));
-      }
-      const np = { x: cx * GRID, y: cy * GRID };
-      const lp = pts[pts.length - 1];
-      if (np.x !== lp.x || np.y !== lp.y) pts.push(np);
-      horiz = !horiz;
+      // Turn by ±60° (adjacent direction) for sharp angular bends — never reverse.
+      const turn = Math.random() > 0.5 ? 1 : -1;
+      // Map the 6 moves around the clock so neighbours are ±60°.
+      const order = [4, 0, 2, 5, 1, 3]; // clockwise ring of MOVES indices
+      const pos = order.indexOf(moveIdx);
+      moveIdx = order[(pos + turn + order.length) % order.length];
+
+      const steps = randInt(1, 4);
+      const [di, dj] = MOVES[moveIdx];
+      i += di * steps;
+      j += dj * steps;
+      latticePts.push([i, j]);
     }
 
-    if (pts.length < 2) continue;
+    const pts = latticePts.map(([li, lj]) => toPixel(li, lj));
 
+    // Drop degenerate traces.
     let totalLength = 0;
     const segLens: number[] = [];
-    for (let i = 1; i < pts.length; i++) {
-      const l =
-        Math.abs(pts[i].x - pts[i - 1].x) +
-        Math.abs(pts[i].y - pts[i - 1].y);
+    for (let k = 1; k < pts.length; k++) {
+      const l = Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y);
       segLens.push(l);
       totalLength += l;
     }
-    if (totalLength < GRID * 2) continue;
+    if (totalLength < STEP * 2) continue;
 
     traces.push({ points: pts, totalLength, segmentLengths: segLens });
 
-    for (let i = 0; i < pts.length; i++) {
-      if (i === 0 || i === pts.length - 1 || Math.random() > 0.65) {
-        const key = `${pts[i].x},${pts[i].y}`;
-        if (!padKeys.has(key)) {
-          padKeys.add(key);
-          pads.push({
-            x: pts[i].x,
-            y: pts[i].y,
-            radius: rand(2, 3.5),
-            isVia: Math.random() > 0.6,
-          });
+    // Nodes at endpoints and some vertices.
+    for (let k = 0; k < pts.length; k++) {
+      if (k === 0 || k === pts.length - 1 || Math.random() > 0.6) {
+        const key = `${Math.round(pts[k].x)},${Math.round(pts[k].y)}`;
+        if (!nodeKeys.has(key)) {
+          nodeKeys.add(key);
+          nodes.push({ x: pts[k].x, y: pts[k].y, size: rand(2.5, 4.5) });
         }
       }
     }
   }
 
-  return { traces, pads };
+  // Crystalline facets — triangles on the lattice, occasionally larger.
+  const facetCount = Math.floor(traceCount * 0.7);
+  for (let n = 0; n < facetCount; n++) {
+    const j = randInt(0, rows);
+    const i = randInt(-Math.ceil(j / 2), cols);
+    const scale = Math.random() > 0.7 ? randInt(2, 4) : 1;
+    // Pick two adjacent directions to form a triangle.
+    const order = [4, 0, 2, 5, 1, 3];
+    const a = randInt(0, order.length - 1);
+    const d1 = MOVES[order[a]];
+    const d2 = MOVES[order[(a + 1) % order.length]];
+    const p0 = toPixel(i, j);
+    const p1 = toPixel(i + d1[0] * scale, j + d1[1] * scale);
+    const p2 = toPixel(i + d2[0] * scale, j + d2[1] * scale);
+    facets.push({ points: [p0, p1, p2] });
+  }
+
+  return { traces, nodes, facets };
+}
+
+function paintBackground(
+  sctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+) {
+  // Deep emerald radial wash — subtle Škoda emerald depth on near-black.
+  const grad = sctx.createRadialGradient(
+    w * 0.5,
+    h * 0.42,
+    0,
+    w * 0.5,
+    h * 0.42,
+    Math.max(w, h) * 0.75,
+  );
+  grad.addColorStop(0, "rgb(9,26,20)");
+  grad.addColorStop(0.55, "rgb(5,15,11)");
+  grad.addColorStop(1, "rgb(2,6,5)");
+  sctx.fillStyle = grad;
+  sctx.fillRect(0, 0, w, h);
 }
 
 function drawStaticLayer(
   sctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
   traces: Trace[],
-  pads: Pad[],
+  nodes: Node[],
+  facets: Facet[],
 ) {
-  const [r, g, b] = COLOR;
+  paintBackground(sctx, w, h);
 
-  sctx.strokeStyle = rgba(r, g, b, STATIC_ALPHA);
+  // Facets first (behind lines).
+  for (const f of facets) {
+    const [p0, p1, p2] = f.points;
+    sctx.beginPath();
+    sctx.moveTo(p0.x, p0.y);
+    sctx.lineTo(p1.x, p1.y);
+    sctx.lineTo(p2.x, p2.y);
+    sctx.closePath();
+    sctx.fillStyle = rgba(FACET_COLOR, FACET_ALPHA);
+    sctx.fill();
+    sctx.strokeStyle = rgba(LINE_COLOR, STATIC_ALPHA * 0.6);
+    sctx.lineWidth = 0.75;
+    sctx.stroke();
+  }
+
+  // Angular traces.
+  sctx.strokeStyle = rgba(LINE_COLOR, STATIC_ALPHA);
   sctx.lineWidth = 1;
   sctx.lineCap = "round";
-  sctx.lineJoin = "round";
-
+  sctx.lineJoin = "miter";
   for (const tr of traces) {
     sctx.beginPath();
     sctx.moveTo(tr.points[0].x, tr.points[0].y);
@@ -131,23 +214,14 @@ function drawStaticLayer(
     sctx.stroke();
   }
 
-  for (const pad of pads) {
-    if (pad.isVia) {
-      sctx.beginPath();
-      sctx.arc(pad.x, pad.y, pad.radius * 0.5, 0, Math.PI * 2);
-      sctx.fillStyle = rgba(r, g, b, PAD_ALPHA);
-      sctx.fill();
-      sctx.beginPath();
-      sctx.arc(pad.x, pad.y, pad.radius + 1, 0, Math.PI * 2);
-      sctx.strokeStyle = rgba(r, g, b, PAD_ALPHA * 0.7);
-      sctx.lineWidth = 0.8;
-      sctx.stroke();
-    } else {
-      sctx.beginPath();
-      sctx.arc(pad.x, pad.y, pad.radius, 0, Math.PI * 2);
-      sctx.fillStyle = rgba(r, g, b, PAD_ALPHA);
-      sctx.fill();
-    }
+  // Nodes as small emerald diamonds (rotated squares) — sharper, on-brand.
+  sctx.fillStyle = rgba(NODE_COLOR, NODE_ALPHA);
+  for (const node of nodes) {
+    sctx.save();
+    sctx.translate(node.x, node.y);
+    sctx.rotate(Math.PI / 4);
+    sctx.fillRect(-node.size / 2, -node.size / 2, node.size, node.size);
+    sctx.restore();
   }
 }
 
@@ -237,7 +311,7 @@ export function BackgroundPattern() {
       staticLayer.height = h * dpr;
       const sctx = staticLayer.getContext("2d")!;
       sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawStaticLayer(sctx, traces, layout.pads);
+      drawStaticLayer(sctx, w, h, traces, layout.nodes, layout.facets);
     }
 
     function drawFrame(time: number) {
@@ -258,7 +332,7 @@ export function BackgroundPattern() {
           traceIndex: randInt(0, traces.length - 1),
           progress: 0,
           speed: 1 / rand(DURATION_MIN_S, DURATION_MAX_S),
-          pulseLength: rand(60, 120),
+          pulseLength: rand(70, 140),
         });
         lastSpawn = time;
         nextSpawnDelay = rand(SPAWN_MIN_MS, SPAWN_MAX_MS);
@@ -273,8 +347,6 @@ export function BackgroundPattern() {
       ctx!.drawImage(staticLayer, 0, 0);
       ctx!.restore();
 
-      const [r, g, b] = COLOR;
-
       for (const pulse of pulses) {
         const trace = traces[pulse.traceIndex];
         const center = pulse.progress * trace.totalLength;
@@ -288,24 +360,29 @@ export function BackgroundPattern() {
         ctx!.save();
         ctx!.beginPath();
         drawTracePortion(ctx!, trace, center - half, center + half);
-        ctx!.strokeStyle = rgba(r, g, b, 0.5 * alpha);
+        ctx!.strokeStyle = rgba(PULSE_COLOR, 0.5 * alpha);
         ctx!.lineWidth = 3;
         ctx!.lineCap = "round";
         ctx!.lineJoin = "round";
         ctx!.shadowBlur = 16;
-        ctx!.shadowColor = rgba(r, g, b, 0.6 * alpha);
+        ctx!.shadowColor = rgba(PULSE_COLOR, 0.6 * alpha);
         ctx!.stroke();
         ctx!.restore();
 
         ctx!.save();
         ctx!.beginPath();
-        drawTracePortion(ctx!, trace, center - half * 0.35, center + half * 0.35);
-        ctx!.strokeStyle = rgba(r, g, b, 0.9 * alpha);
+        drawTracePortion(
+          ctx!,
+          trace,
+          center - half * 0.35,
+          center + half * 0.35,
+        );
+        ctx!.strokeStyle = rgba(PULSE_COLOR, 0.95 * alpha);
         ctx!.lineWidth = 1.5;
         ctx!.lineCap = "round";
         ctx!.lineJoin = "round";
         ctx!.shadowBlur = 6;
-        ctx!.shadowColor = rgba(r, g, b, 0.8 * alpha);
+        ctx!.shadowColor = rgba(PULSE_COLOR, 0.85 * alpha);
         ctx!.stroke();
         ctx!.restore();
       }

@@ -34,8 +34,9 @@ export function playCorrect() {
 }
 
 export function playWrong() {
-  tone(311, 0.25, "triangle", 0.08);
-  tone(233, 0.35, "triangle", 0.06, 0.12);
+  tone(420, 0.15, "sine", 0.1);
+  tone(350, 0.18, "sine", 0.09, 0.1);
+  tone(280, 0.3, "sine", 0.07, 0.22);
 }
 
 export function playTimeout() {

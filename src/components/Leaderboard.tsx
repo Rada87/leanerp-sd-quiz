@@ -20,13 +20,6 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
     loadScores();
   }, [loadScores]);
 
-  const handleClear = async () => {
-    if (window.confirm("Clear all leaderboard data? This cannot be undone.")) {
-      await scoreStorage.clearScores();
-      setScores([]);
-    }
-  };
-
   return (
     <div className="app-container" style={{ justifyContent: "center" }}>
       <motion.div
@@ -34,7 +27,7 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        style={{ maxWidth: 650, margin: "0 auto" }}
+        style={{ maxWidth: 850, margin: "0 auto" }}
       >
         <div
           style={{
@@ -180,11 +173,6 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
           >
             Back to Start
           </motion.button>
-          {scores.length > 0 && (
-            <button className="btn-danger" onClick={handleClear}>
-              Clear Leaderboard
-            </button>
-          )}
         </div>
       </motion.div>
     </div>
