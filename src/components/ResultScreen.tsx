@@ -36,16 +36,15 @@ export function ResultScreen({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const duration = 1000;
-    const steps = 30;
-    const increment = score / steps;
-    let current = 0;
+    const duration = 2500;
+    const steps = 60;
     let step = 0;
 
     const interval = setInterval(() => {
       step++;
-      current = Math.min(Math.round(increment * step), score);
-      setDisplayScore(current);
+      const t = step / steps;
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayScore(Math.min(Math.round(score * eased), score));
       if (step >= steps) {
         clearInterval(interval);
         setShowTier(true);
@@ -64,7 +63,7 @@ export function ResultScreen({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        style={{ textAlign: "center", maxWidth: 600, margin: "0 auto" }}
+        style={{ textAlign: "center", maxWidth: 850, margin: "0 auto" }}
       >
         <motion.div
           initial={{ opacity: 0, y: -10 }}

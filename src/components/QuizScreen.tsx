@@ -18,6 +18,7 @@ interface QuizScreenProps {
   onSelectAnswer: (optionId: string, remainingTime: number) => void;
   onTimeout: () => void;
   onContinue: () => void;
+  onFinish: () => void;
 }
 
 export function QuizScreen({
@@ -31,6 +32,7 @@ export function QuizScreen({
   onSelectAnswer,
   onTimeout,
   onContinue,
+  onFinish,
 }: QuizScreenProps) {
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -181,6 +183,30 @@ export function QuizScreen({
             </motion.button>
           )}
         </div>
+
+        <button
+          onClick={onFinish}
+          style={{
+            alignSelf: "center",
+            background: "transparent",
+            color: "var(--color-text-muted)",
+            fontSize: "0.8rem",
+            padding: "8px 16px",
+            borderRadius: "var(--radius-sm)",
+            opacity: 0.5,
+            transition: "opacity 0.2s, color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.9";
+            e.currentTarget.style.color = "var(--color-text)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "0.5";
+            e.currentTarget.style.color = "var(--color-text-muted)";
+          }}
+        >
+          Finish Quiz
+        </button>
       </div>
     </div>
   );

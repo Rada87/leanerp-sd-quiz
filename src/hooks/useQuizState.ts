@@ -29,6 +29,7 @@ type QuizAction =
     }
   | { type: "HANDLE_TIMEOUT" }
   | { type: "CONTINUE_TO_NEXT" }
+  | { type: "FINISH_QUIZ" }
   | { type: "GO_TO_LEADERBOARD" }
   | { type: "GO_TO_START" }
   | { type: "PLAY_AGAIN" };
@@ -123,6 +124,8 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
         isAnswered: false,
       };
     }
+    case "FINISH_QUIZ":
+      return { ...state, screen: "result" };
     case "GO_TO_LEADERBOARD":
       return { ...state, screen: "leaderboard" };
     case "GO_TO_START":
@@ -182,6 +185,24 @@ export function useQuizState() {
     dispatch({ type: "CONTINUE_TO_NEXT" });
   }, [state.score, state.playerName, state.correctAnswers, state.questions.length]);
 
+  const finishQuiz = useCallback(async () => {
+    const answered = state.answerHistory.length;
+    const total = state.questions.length;
+    const maxS = total * MAX_POINTS_PER_QUESTION;
+    const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
+    await scoreStorage.saveScore({
+      id: crypto.randomUUID(),
+      playerName: state.playerName,
+      score: state.score,
+      maxScore: maxS,
+      percentage: pct,
+      correctAnswers: state.correctAnswers,
+      totalQuestions: total,
+      createdAt: new Date().toISOString(),
+    });
+    dispatch({ type: "FINISH_QUIZ" });
+  }, [state.answerHistory.length, state.questions.length, state.score, state.playerName, state.correctAnswers]);
+
   const goToLeaderboard = useCallback(() => {
     dispatch({ type: "GO_TO_LEADERBOARD" });
   }, []);
@@ -213,6 +234,7 @@ export function useQuizState() {
     handleTimeout,
     continueToNext,
     saveAndShowResult,
+    finishQuiz,
     goToLeaderboard,
     goToStart,
     playAgain,

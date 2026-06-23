@@ -133,6 +133,7 @@ function AppContent() {
               onSelectAnswer={quiz.selectAnswer}
               onTimeout={quiz.handleTimeout}
               onContinue={handleContinue}
+              onFinish={quiz.finishQuiz}
             />
           </motion.div>
         )}
