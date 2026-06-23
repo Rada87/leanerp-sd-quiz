@@ -208,7 +208,7 @@ export function BackgroundPattern() {
 
     let raf = 0;
     let traces: Trace[] = [];
-    let staticLayer: HTMLCanvasElement;
+    let staticLayer: HTMLCanvasElement = document.createElement("canvas");
     let pulses: Pulse[] = [];
     let lastTime = 0;
     let lastSpawn = 0;
