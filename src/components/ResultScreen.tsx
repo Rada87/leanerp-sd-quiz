@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getTier } from "../utils/format";
+import { useSettings } from "../hooks/useSettings";
+import { playComplete } from "../utils/sounds";
 import { Confetti } from "./Confetti";
 
 interface ResultScreenProps {
@@ -24,9 +26,14 @@ export function ResultScreen({
   onPlayAgain,
   onLeaderboard,
 }: ResultScreenProps) {
+  const { settings } = useSettings();
   const tier = getTier(percentage);
   const [displayScore, setDisplayScore] = useState(0);
   const [showTier, setShowTier] = useState(false);
+
+  useEffect(() => {
+    if (settings.soundEnabled) playComplete();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const duration = 1000;
@@ -50,7 +57,7 @@ export function ResultScreen({
 
   return (
     <div className="app-container" style={{ justifyContent: "center" }}>
-      <Confetti count={30} spread={400} />
+      <Confetti count={80} spread={500} />
 
       <motion.div
         className="screen-card"

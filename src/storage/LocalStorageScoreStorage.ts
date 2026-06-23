@@ -29,4 +29,25 @@ export class LocalStorageScoreStorage implements ScoreStorage {
   async clearScores(): Promise<void> {
     localStorage.removeItem(STORAGE_KEY);
   }
+
+  async exportScores(): Promise<ScoreRecord[]> {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  async importScores(records: ScoreRecord[]): Promise<void> {
+    try {
+      const existing = await this.exportScores();
+      const ids = new Set(existing.map((r) => r.id));
+      const merged = [...existing, ...records.filter((r) => !ids.has(r.id))];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    } catch {
+      // silently drop
+    }
+  }
 }

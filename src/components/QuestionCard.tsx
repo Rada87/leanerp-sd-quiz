@@ -1,5 +1,8 @@
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Question } from "../types";
+import { useSettings } from "../hooks/useSettings";
+import { playCorrect, playWrong, playTimeout } from "../utils/sounds";
 import { AnswerButton } from "./AnswerButton";
 import { Confetti } from "./Confetti";
 
@@ -22,8 +25,19 @@ export function QuestionCard({
   pointsEarned,
   onSelectAnswer,
 }: QuestionCardProps) {
+  const { settings } = useSettings();
+  const prevAnswered = useRef(false);
   const isCorrect = selectedAnswer === question.correctOptionId;
   const isTimeout = isAnswered && selectedAnswer === null;
+
+  useEffect(() => {
+    if (isAnswered && !prevAnswered.current && settings.soundEnabled) {
+      if (selectedAnswer === null) playTimeout();
+      else if (selectedAnswer === question.correctOptionId) playCorrect();
+      else playWrong();
+    }
+    prevAnswered.current = isAnswered;
+  }, [isAnswered, selectedAnswer, question.correctOptionId, settings.soundEnabled]);
 
   function getOptionState(optionId: string) {
     if (!isAnswered) return "default" as const;
@@ -131,7 +145,7 @@ export function QuestionCard({
           )}
         </AnimatePresence>
 
-        {isAnswered && isCorrect && <Confetti count={16} spread={200} />}
+        {isAnswered && isCorrect && <Confetti count={35} spread={280} />}
       </motion.div>
     </AnimatePresence>
   );
