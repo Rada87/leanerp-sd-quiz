@@ -40,21 +40,15 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
       transition={{ delay: index * 0.05 }}
       style={{ position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden" }}
     >
-      {/* Delete hint shown behind the row */}
+      {/* Delete background */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background: "#c0392b",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          paddingRight: 20,
           borderRadius: "var(--radius-sm)",
         }}
-      >
-        <span style={{ fontSize: "1.3rem" }}>🗑️</span>
-      </div>
+      />
 
       {/* Draggable row */}
       <motion.div
@@ -191,17 +185,6 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
           </div>
         ) : (
           <>
-            <div
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--color-text-muted)",
-                textAlign: "right",
-                marginBottom: 8,
-                opacity: 0.7,
-              }}
-            >
-              ← swipe to delete
-            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <AnimatePresence mode="popLayout">
                 {scores.map((record, index) => (
