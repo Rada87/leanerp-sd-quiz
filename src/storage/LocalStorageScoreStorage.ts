@@ -26,6 +26,17 @@ export class LocalStorageScoreStorage implements ScoreStorage {
     }
   }
 
+  async deleteScore(id: string): Promise<void> {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const scores: ScoreRecord[] = JSON.parse(raw);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scores.filter((r) => r.id !== id)));
+    } catch {
+      // silently drop
+    }
+  }
+
   async clearScores(): Promise<void> {
     localStorage.removeItem(STORAGE_KEY);
   }

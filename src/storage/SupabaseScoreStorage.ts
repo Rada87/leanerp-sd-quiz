@@ -45,6 +45,11 @@ export class SupabaseScoreStorage implements ScoreStorage {
     return (data ?? []).map(fromRow);
   }
 
+  async deleteScore(id: string): Promise<void> {
+    const { error } = await getClient().from("leaderboard").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+
   async clearScores(): Promise<void> {
     const { error } = await getClient()
       .from("leaderboard")

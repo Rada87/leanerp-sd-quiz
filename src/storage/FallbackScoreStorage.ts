@@ -26,6 +26,14 @@ export class FallbackScoreStorage implements ScoreStorage {
     }
   }
 
+  async deleteScore(id: string): Promise<void> {
+    try {
+      await this.primary.deleteScore(id);
+    } catch {
+      await this.fallback.deleteScore(id);
+    }
+  }
+
   async clearScores(): Promise<void> {
     try {
       await this.primary.clearScores();
