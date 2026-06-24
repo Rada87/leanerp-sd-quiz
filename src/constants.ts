@@ -5,4 +5,5 @@ export const SCORING_EXPONENT = 0.55;
 export const FEEDBACK_AUTO_ADVANCE_MS = 2000;
 export const KIOSK_IDLE_TIMEOUT_MS = 45_000;
 export const LEADERBOARD_TOP_N = 10;
+export const QUIZ_QUESTION_COUNT = 5;
 export const STORAGE_KEY = "leanerp-quiz-scores";

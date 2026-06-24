@@ -4,6 +4,7 @@ import { calculatePoints } from "../utils/scoring";
 import {
   MAX_POINTS_PER_QUESTION,
   QUESTION_TIME_SECONDS,
+  QUIZ_QUESTION_COUNT,
 } from "../constants";
 import { scoreStorage } from "../storage";
 
@@ -62,7 +63,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
         ...initialState,
         screen: "quiz",
         playerName: action.playerName || "Guest",
-        questions: shuffleArray(action.questions),
+        questions: shuffleArray(action.questions).slice(0, QUIZ_QUESTION_COUNT),
       };
     }
     case "SELECT_ANSWER": {
