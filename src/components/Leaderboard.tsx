@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion";
-import type { PanInfo } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { ScoreRecord } from "../types";
 import { scoreStorage } from "../storage";
 import { formatDate } from "../utils/format";
@@ -18,58 +17,53 @@ interface RowProps {
 }
 
 function SwipeableRow({ record, index, onDelete }: RowProps) {
-  const x = useMotionValue(0);
-
-  async function handleDragEnd(_: PointerEvent, info: PanInfo) {
-    if (info.offset.x < DELETE_THRESHOLD) {
-      await animate(x, -400, { duration: 0.18 });
-      onDelete(record.id);
-    } else {
-      animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
-    }
-  }
-
+  const dragX = useRef(0);
   const isFirst = index === 0;
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
+      key={record.id}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -300, transition: { duration: 0.18 } }}
-      transition={{ delay: index * 0.05 }}
-      style={{ position: "relative", borderRadius: "var(--radius-sm)", overflow: "hidden" }}
+      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+      transition={{ delay: index * 0.04, duration: 0.2 }}
+      style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-sm)" }}
     >
-      {/* Delete background */}
+      {/* Red background revealed on swipe */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background: "#c0392b",
-          borderRadius: "var(--radius-sm)",
         }}
       />
 
-      {/* Draggable row */}
+      {/* Draggable content */}
       <motion.div
         drag="x"
-        dragConstraints={{ left: -140, right: 0 }}
-        dragElastic={{ left: 0.08, right: 0.02 }}
+        dragConstraints={{ left: -200, right: 0 }}
+        dragElastic={0}
+        dragMomentum={false}
+        onDrag={(_, info) => { dragX.current = info.offset.x; }}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < DELETE_THRESHOLD) {
+            onDelete(record.id);
+          }
+        }}
         style={{
-          x,
           display: "grid",
           gridTemplateColumns: "36px 1fr auto",
           alignItems: "center",
           gap: 16,
           padding: "14px 16px",
-          background: isFirst ? "rgba(109, 255, 163, 0.06)" : "var(--color-bg)",
+          background: isFirst ? "#141d17" : "var(--color-bg-card)",
           border: `1px solid ${isFirst ? "rgba(109, 255, 163, 0.15)" : "var(--color-border)"}`,
           borderRadius: "var(--radius-sm)",
           cursor: "grab",
           userSelect: "none",
           touchAction: "pan-y",
+          position: "relative",
         }}
-        onDragEnd={handleDragEnd}
         whileTap={{ cursor: "grabbing" }}
       >
         <div
@@ -184,20 +178,18 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
             No scores yet. Be the first to play!
           </div>
         ) : (
-          <>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <AnimatePresence mode="popLayout">
-                {scores.map((record, index) => (
-                  <SwipeableRow
-                    key={record.id}
-                    record={record}
-                    index={index}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          </>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <AnimatePresence>
+              {scores.map((record, index) => (
+                <SwipeableRow
+                  key={record.id}
+                  record={record}
+                  index={index}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
