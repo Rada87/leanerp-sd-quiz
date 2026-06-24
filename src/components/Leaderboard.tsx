@@ -27,7 +27,13 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
       transition={{ delay: index * 0.04, duration: 0.2 }}
-      style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-sm)" }}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: "var(--radius-sm)",
+        border: `1px solid ${isFirst ? "rgba(109, 255, 163, 0.15)" : "var(--color-border)"}`,
+        background: "#c0392b",
+      }}
     >
       {/* Draggable content */}
       <motion.div
@@ -48,8 +54,7 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
           gap: 16,
           padding: "14px 16px",
           background: isFirst ? "#141d17" : "var(--color-bg-card)",
-          border: `1px solid ${isFirst ? "rgba(109, 255, 163, 0.15)" : "var(--color-border)"}`,
-          borderRadius: "var(--radius-sm)",
+          borderRadius: "7px",
           cursor: "grab",
           userSelect: "none",
           touchAction: "pan-y",
