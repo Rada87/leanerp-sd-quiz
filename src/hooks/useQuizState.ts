@@ -186,7 +186,6 @@ export function useQuizState() {
   }, [state.score, state.playerName, state.correctAnswers, state.questions.length]);
 
   const finishQuiz = useCallback(async () => {
-    const answered = state.answerHistory.length;
     const total = state.questions.length;
     const maxS = total * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
