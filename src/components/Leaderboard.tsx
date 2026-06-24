@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion";
 import type { ScoreRecord } from "../types";
 import { scoreStorage } from "../storage";
 import { formatDate } from "../utils/format";
@@ -17,7 +17,7 @@ interface RowProps {
 }
 
 function SwipeableRow({ record, index, onDelete }: RowProps) {
-  const dragX = useRef(0);
+  const x = useMotionValue(0);
   const isFirst = index === 0;
 
   return (
@@ -41,13 +41,15 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
         dragConstraints={{ left: -220, right: 0 }}
         dragElastic={0}
         dragMomentum={false}
-        onDrag={(_, info) => { dragX.current = info.offset.x; }}
-        onDragEnd={(_, info) => {
+        onDragEnd={async (_, info) => {
           if (info.offset.x < DELETE_THRESHOLD) {
+            await animate(x, -400, { duration: 0.18 });
             onDelete(record.id);
+          } else {
+            animate(x, 0, { type: "spring", stiffness: 400, damping: 35 });
           }
         }}
-        style={{
+        style={{ x,
           display: "grid",
           gridTemplateColumns: "36px 1fr auto",
           alignItems: "center",
