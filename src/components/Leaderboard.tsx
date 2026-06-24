@@ -8,7 +8,7 @@ interface LeaderboardProps {
   onBack: () => void;
 }
 
-const DELETE_THRESHOLD = -80;
+const DELETE_THRESHOLD = -160;
 
 interface RowProps {
   record: ScoreRecord;
@@ -38,7 +38,7 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
       {/* Draggable content */}
       <motion.div
         drag="x"
-        dragConstraints={{ left: -200, right: 0 }}
+        dragConstraints={{ left: -220, right: 0 }}
         dragElastic={0}
         dragMomentum={false}
         onDrag={(_, info) => { dragX.current = info.offset.x; }}
