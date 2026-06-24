@@ -26,3 +26,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Agent skills (external dependencies, tracked by skills-lock.json)
+.agents/
+
+# Temporary files
+tmp/
