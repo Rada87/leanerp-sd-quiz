@@ -12,7 +12,13 @@ export interface Question {
   explanation: string;
 }
 
-export type AppScreen = "start" | "quiz" | "result" | "leaderboard";
+export type AppScreen = "start" | "quiz" | "result" | "leaderboard" | "editor";
+
+export interface QuestionStorage {
+  getQuestions(): Promise<Question[]>;
+  saveQuestion(question: Question): Promise<void>;
+  deleteQuestion(id: string): Promise<void>;
+}
 
 export interface ScoreRecord {
   id: string;

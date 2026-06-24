@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuizState } from "./hooks/useQuizState";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
@@ -10,6 +10,9 @@ import { QuizScreen } from "./components/QuizScreen";
 import { ResultScreen } from "./components/ResultScreen";
 import { Leaderboard } from "./components/Leaderboard";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { QuestionsEditor } from "./components/QuestionsEditor";
+import { questionStorage } from "./storage/QuestionStorage";
+import type { Question } from "./types";
 
 function GearIcon() {
   return (
@@ -32,6 +35,11 @@ function GearIcon() {
 function AppContent() {
   const quiz = useQuizState();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
+
+  useEffect(() => {
+    questionStorage.getQuestions().then(setLoadedQuestions).catch(() => {});
+  }, []);
 
   const handleIdleReset = useCallback(() => {
     quiz.goToStart();
@@ -42,6 +50,10 @@ function AppContent() {
     handleIdleReset,
     quiz.screen === "result" || quiz.screen === "leaderboard"
   );
+
+  const handleStart = useCallback((name: string) => {
+    quiz.startQuiz(name, loadedQuestions);
+  }, [quiz.startQuiz, loadedQuestions]);
 
   const handleContinue = useCallback(() => {
     const isLast = quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
@@ -101,6 +113,7 @@ function AppContent() {
         onClose={() => setSettingsOpen(false)}
         onLeaderboard={quiz.goToLeaderboard}
         onHome={quiz.goToStart}
+        onEditor={quiz.goToEditor}
       />
 
       <AnimatePresence mode="wait">
@@ -112,7 +125,7 @@ function AppContent() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <StartScreen onStart={quiz.startQuiz} />
+            <StartScreen onStart={handleStart} />
           </motion.div>
         )}
 
@@ -171,6 +184,18 @@ function AppContent() {
             transition={{ duration: 0.3 }}
           >
             <Leaderboard onBack={quiz.goToStart} />
+          </motion.div>
+        )}
+
+        {quiz.screen === "editor" && (
+          <motion.div
+            key="editor"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <QuestionsEditor onBack={quiz.goToStart} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -9,9 +9,10 @@ interface SettingsPanelProps {
   onClose: () => void;
   onLeaderboard: () => void;
   onHome: () => void;
+  onEditor: () => void;
 }
 
-export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor }: SettingsPanelProps) {
   const { settings, setSoundEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
@@ -152,6 +153,17 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome }: Settin
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 8 }}
               >
+                <button
+                  className="btn-secondary"
+                  onClick={() => { onEditor(); onClose(); }}
+                  style={{
+                    padding: "10px 16px",
+                    minHeight: "auto",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  Edit Questions
+                </button>
                 <button
                   className="btn-secondary"
                   onClick={() => { onLeaderboard(); onClose(); }}

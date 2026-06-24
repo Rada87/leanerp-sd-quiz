@@ -1,6 +1,5 @@
 import { useCallback, useReducer } from "react";
 import type { AnswerRecord, AppScreen, Question } from "../types";
-import { questions as questionBank } from "../data/questions";
 import { calculatePoints } from "../utils/scoring";
 import {
   MAX_POINTS_PER_QUESTION,
@@ -21,7 +20,7 @@ interface QuizState {
 }
 
 type QuizAction =
-  | { type: "START_QUIZ"; playerName: string }
+  | { type: "START_QUIZ"; playerName: string; questions: Question[] }
   | {
       type: "SELECT_ANSWER";
       optionId: string;
@@ -32,6 +31,7 @@ type QuizAction =
   | { type: "FINISH_QUIZ" }
   | { type: "GO_TO_LEADERBOARD" }
   | { type: "GO_TO_START" }
+  | { type: "GO_TO_EDITOR" }
   | { type: "PLAY_AGAIN" };
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -62,7 +62,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
         ...initialState,
         screen: "quiz",
         playerName: action.playerName || "Guest",
-        questions: shuffleArray(questionBank),
+        questions: shuffleArray(action.questions),
       };
     }
     case "SELECT_ANSWER": {
@@ -130,6 +130,8 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return { ...state, screen: "leaderboard" };
     case "GO_TO_START":
       return { ...state, screen: "start" };
+    case "GO_TO_EDITOR":
+      return { ...state, screen: "editor" };
     case "PLAY_AGAIN":
       return { ...initialState, screen: "start" };
     default:
@@ -150,8 +152,8 @@ export function useQuizState() {
   const lastAnswer: AnswerRecord | null =
     state.answerHistory[state.answerHistory.length - 1] ?? null;
 
-  const startQuiz = useCallback((playerName: string) => {
-    dispatch({ type: "START_QUIZ", playerName });
+  const startQuiz = useCallback((playerName: string, questions: Question[]) => {
+    dispatch({ type: "START_QUIZ", playerName, questions });
   }, []);
 
   const selectAnswer = useCallback(
@@ -210,6 +212,10 @@ export function useQuizState() {
     dispatch({ type: "GO_TO_START" });
   }, []);
 
+  const goToEditor = useCallback(() => {
+    dispatch({ type: "GO_TO_EDITOR" });
+  }, []);
+
   const playAgain = useCallback(() => {
     dispatch({ type: "PLAY_AGAIN" });
   }, []);
@@ -236,6 +242,7 @@ export function useQuizState() {
     finishQuiz,
     goToLeaderboard,
     goToStart,
+    goToEditor,
     playAgain,
   };
 }
