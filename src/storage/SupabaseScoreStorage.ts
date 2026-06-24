@@ -1,12 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { LEADERBOARD_TOP_N } from "../constants";
 import type { ScoreRecord } from "../types";
 import type { ScoreStorage } from "./ScoreStorage";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string
-);
+let _client: SupabaseClient | null = null;
+
+function getClient(): SupabaseClient {
+  if (_client) return _client;
+  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+  if (!url || !key) throw new Error("Supabase env vars not configured");
+  _client = createClient(url, key);
+  return _client;
+}
 
 function toRow(r: ScoreRecord) {
   return {
@@ -36,12 +42,12 @@ function fromRow(row: Record<string, unknown>): ScoreRecord {
 
 export class SupabaseScoreStorage implements ScoreStorage {
   async saveScore(record: ScoreRecord): Promise<void> {
-    const { error } = await supabase.from("leaderboard").insert(toRow(record));
+    const { error } = await getClient().from("leaderboard").insert(toRow(record));
     if (error) throw new Error(error.message);
   }
 
   async getScores(): Promise<ScoreRecord[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getClient()
       .from("leaderboard")
       .select("*")
       .order("score", { ascending: false })
@@ -51,7 +57,7 @@ export class SupabaseScoreStorage implements ScoreStorage {
   }
 
   async clearScores(): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getClient()
       .from("leaderboard")
       .delete()
       .neq("id", "00000000-0000-0000-0000-000000000000");
@@ -59,7 +65,7 @@ export class SupabaseScoreStorage implements ScoreStorage {
   }
 
   async exportScores(): Promise<ScoreRecord[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getClient()
       .from("leaderboard")
       .select("*")
       .order("score", { ascending: false });
@@ -69,7 +75,7 @@ export class SupabaseScoreStorage implements ScoreStorage {
 
   async importScores(records: ScoreRecord[]): Promise<void> {
     if (!records.length) return;
-    const { error } = await supabase
+    const { error } = await getClient()
       .from("leaderboard")
       .upsert(records.map(toRow), { onConflict: "id" });
     if (error) throw new Error(error.message);
