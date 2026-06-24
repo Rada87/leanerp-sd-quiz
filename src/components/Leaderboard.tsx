@@ -29,15 +29,6 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
       transition={{ delay: index * 0.04, duration: 0.2 }}
       style={{ position: "relative", overflow: "hidden", borderRadius: "var(--radius-sm)" }}
     >
-      {/* Red background revealed on swipe */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "#c0392b",
-        }}
-      />
-
       {/* Draggable content */}
       <motion.div
         drag="x"
