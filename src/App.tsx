@@ -99,6 +99,8 @@ function AppContent() {
       <SettingsPanel
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        onLeaderboard={quiz.goToLeaderboard}
+        onHome={quiz.goToStart}
       />
 
       <AnimatePresence mode="wait">
@@ -127,6 +129,7 @@ function AppContent() {
               questionIndex={quiz.currentQuestionIndex}
               totalQuestions={quiz.totalQuestions}
               score={quiz.score}
+              playerName={quiz.playerName}
               selectedAnswer={quiz.selectedAnswer}
               isAnswered={quiz.isAnswered}
               pointsEarned={quiz.lastAnswer?.pointsEarned ?? 0}

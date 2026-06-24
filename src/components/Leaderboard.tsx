@@ -27,7 +27,7 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        style={{ maxWidth: 850, margin: "0 auto" }}
+        style={{  }}
       >
         <div
           style={{

@@ -12,6 +12,7 @@ interface QuizScreenProps {
   questionIndex: number;
   totalQuestions: number;
   score: number;
+  playerName: string;
   selectedAnswer: string | null;
   isAnswered: boolean;
   pointsEarned: number;
@@ -26,6 +27,7 @@ export function QuizScreen({
   questionIndex,
   totalQuestions,
   score,
+  playerName,
   selectedAnswer,
   isAnswered,
   pointsEarned,
@@ -89,18 +91,51 @@ export function QuizScreen({
             flexWrap: "wrap",
           }}
         >
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Question{" "}
-            <span style={{ color: "var(--color-primary)" }}>
-              {questionIndex + 1}
-            </span>{" "}
-            / {totalQuestions}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                style={{ flexShrink: 0, opacity: 0.6 }}
+              >
+                <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "var(--color-text)",
+                  maxWidth: 120,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {playerName}
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--color-text-muted)",
+                fontWeight: 600,
+              }}
+            >
+              Question{" "}
+              <span style={{ color: "var(--color-primary)" }}>
+                {questionIndex + 1}
+              </span>{" "}
+              / {totalQuestions}
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>

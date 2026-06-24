@@ -7,9 +7,11 @@ import type { ScoreRecord } from "../types";
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onLeaderboard: () => void;
+  onHome: () => void;
 }
 
-export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome }: SettingsPanelProps) {
   const { settings, setSoundEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
@@ -51,7 +53,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const handleClear = async () => {
     if (window.confirm("Clear all leaderboard data? This cannot be undone.")) {
       await scoreStorage.clearScores();
-      flash("Leaderboard cleared");
+      onClose();
+      onHome();
     }
   };
 
@@ -149,6 +152,17 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 8 }}
               >
+                <button
+                  className="btn-secondary"
+                  onClick={() => { onLeaderboard(); onClose(); }}
+                  style={{
+                    padding: "10px 16px",
+                    minHeight: "auto",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  View Leaderboard
+                </button>
                 <button
                   className="btn-secondary"
                   onClick={handleExport}
