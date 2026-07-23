@@ -35,3 +35,8 @@ dist-ssr
 
 # Temporary files
 tmp/
+
+# Local agent planning notes
+task_plan.md
+findings.md
+progress.md

@@ -40,7 +40,7 @@ Struktura na VPS podle konvence:
 /srv/www/leanerp-sd-quiz/
   app/    ← git clone tohoto repozitáře (obsahuje Dockerfile + docker-compose.yml)
   data/   ← neversionovaná SQLite databáze (bind-mount do containeru)
-  .env/   ← .env se secrets (APP_PORT, ...)
+  .env    ← interní konfigurace (APP_PORT, ...)
 ```
 
 Postup:
@@ -68,6 +68,8 @@ location /apps/leanerp-sd-quiz/ {
 }
 ```
 
-(Trailing `/` u `proxy_pass` odřízne prefix `/apps/leanerp-sd-quiz/`, takže appka uvnitř containeru o něm neví — proto `base: '/'` ve `vite.config.ts`.)
+(Trailing `/` u `proxy_pass` odřízne prefix `/apps/leanerp-sd-quiz/`. Produkční Vite build ale používá stejný prefix pro URL statických souborů a API volání.)
+
+Podrobný postup, veřejné URL a kontrakt API pro prezentaci jsou v [deploy.md](deploy.md).
 
 GitHub Actions (`.github/workflows/ci.yml`) jen lintuje a builduje na push/PR — nasazení je manuální `git pull` + `docker compose up -d --build` na VPS.

@@ -1,8 +1,10 @@
 import type { ScoreRecord } from "../types";
 import type { ScoreStorage } from "./ScoreStorage";
 
+const apiBase = `${import.meta.env.BASE_URL}api`;
+
 async function request(path: string, init?: RequestInit): Promise<Response> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${apiBase}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });

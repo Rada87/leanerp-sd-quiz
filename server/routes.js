@@ -16,6 +16,17 @@ function scoreFromRow(row) {
   };
 }
 
+function publicLeaderboardEntryFromRow(row) {
+  return {
+    playerName: row.player_name,
+    score: row.score,
+    percentage: row.percentage,
+    correctAnswers: row.correct_answers,
+    totalQuestions: row.total_questions,
+    createdAt: row.created_at,
+  };
+}
+
 function questionFromRow(row) {
   return {
     id: row.id,
@@ -36,6 +47,16 @@ router.get("/scores", (_req, res) => {
     .prepare("SELECT * FROM scores ORDER BY score DESC LIMIT ?")
     .all(LEADERBOARD_TOP_N);
   res.json(rows.map(scoreFromRow));
+});
+
+// Stable, intentionally limited data contract for public displays such as
+// the Škoda Days presentation. It never exposes score IDs or admin data.
+router.get("/leaderboard", (_req, res) => {
+  const rows = db
+    .prepare("SELECT * FROM scores ORDER BY score DESC, created_at ASC LIMIT ?")
+    .all(LEADERBOARD_TOP_N);
+  res.set("Cache-Control", "public, max-age=10");
+  res.json({ updatedAt: new Date().toISOString(), entries: rows.map(publicLeaderboardEntryFromRow) });
 });
 
 router.get("/scores/export", (_req, res) => {

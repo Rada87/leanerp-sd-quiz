@@ -1,5 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG VITE_BASE_PATH=/apps/leanerp-sd-quiz/
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
