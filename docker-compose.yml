@@ -1,0 +1,15 @@
+# Podle konvence /srv/www/<projekt>/{app,data,.env} tento soubor žije v app/,
+# proto data a .env odkazují o úroveň výš.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      PORT: 3000
+      DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:${APP_PORT:-8213}:3000"
+    volumes:
+      - ../data:/app/data

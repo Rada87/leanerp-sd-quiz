@@ -64,7 +64,7 @@ export function QuestionsEditor({ onBack }: Props) {
       setQuestions(prev => prev.filter(q => q.id !== id));
       flash("Question deleted");
     } catch {
-      flash("Failed to delete — Supabase may be unavailable", false);
+      flash("Failed to delete — server may be unavailable", false);
     }
   };
 
@@ -83,23 +83,23 @@ export function QuestionsEditor({ onBack }: Props) {
         return idx >= 0 ? prev.map(x => x.id === q.id ? q : x) : [...prev, q];
       });
       setEditingQuestion(null);
-      flash("Saved to Supabase");
+      flash("Saved to server");
     } catch {
-      flash("Failed to save — Supabase may be unavailable", false);
+      flash("Failed to save — server may be unavailable", false);
     } finally {
       setSaving(false);
     }
   };
 
   const handleSyncAll = async () => {
-    if (!window.confirm(`Upload all ${questions.length} questions to Supabase?`)) return;
+    if (!window.confirm(`Upload all ${questions.length} questions to the server?`)) return;
     setSyncing(true);
     let ok = 0;
     for (const q of questions) {
       try { await questionStorage.saveQuestion(q); ok++; } catch { /* skip */ }
     }
     setSyncing(false);
-    flash(`Synced ${ok}/${questions.length} questions to Supabase`);
+    flash(`Synced ${ok}/${questions.length} questions to the server`);
   };
 
   const updateOption = (idx: number, text: string) => {
@@ -160,8 +160,8 @@ export function QuestionsEditor({ onBack }: Props) {
             </h2>
             <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: 2 }}>
               Source:{" "}
-              <span style={{ color: questionSource === "supabase" ? "var(--color-primary)" : "var(--color-text-muted)" }}>
-                {questionSource === "supabase" ? "Supabase" : questionSource === "local" ? "local JSON" : "loading…"}
+              <span style={{ color: questionSource === "server" ? "var(--color-primary)" : "var(--color-text-muted)" }}>
+                {questionSource === "server" ? "Server" : questionSource === "local" ? "local JSON" : "loading…"}
               </span>
               {" · "}{questions.length} questions
             </div>
@@ -174,7 +174,7 @@ export function QuestionsEditor({ onBack }: Props) {
                 disabled={syncing}
                 style={{ padding: "8px 14px", minHeight: "auto", fontSize: "0.8rem" }}
               >
-                {syncing ? "Syncing…" : "Upload to Supabase"}
+                {syncing ? "Syncing…" : "Upload to server"}
               </button>
             )}
             <button

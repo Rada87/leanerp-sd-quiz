@@ -15,6 +15,9 @@ dist
 dist-ssr
 *.local
 
+# Local SQLite data (bind-mounted in Docker, never versioned)
+/data
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

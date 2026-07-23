@@ -1,18 +1,18 @@
 import type { Question, QuestionStorage } from "../types";
-import { SupabaseQuestionStorage } from "./SupabaseQuestionStorage";
+import { ApiQuestionStorage } from "./ApiQuestionStorage";
 import { StaticJsonQuestionStorage } from "./StaticJsonQuestionStorage";
 
-const supabase = new SupabaseQuestionStorage();
+const api = new ApiQuestionStorage();
 const staticJson = new StaticJsonQuestionStorage();
 
-export let questionSource: "supabase" | "local" | "unknown" = "unknown";
+export let questionSource: "server" | "local" | "unknown" = "unknown";
 
 export const questionStorage: QuestionStorage = {
   async getQuestions(): Promise<Question[]> {
     try {
-      const qs = await supabase.getQuestions();
+      const qs = await api.getQuestions();
       if (qs.length > 0) {
-        questionSource = "supabase";
+        questionSource = "server";
         return qs;
       }
     } catch {
@@ -23,10 +23,10 @@ export const questionStorage: QuestionStorage = {
   },
 
   async saveQuestion(question: Question): Promise<void> {
-    return supabase.saveQuestion(question);
+    return api.saveQuestion(question);
   },
 
   async deleteQuestion(id: string): Promise<void> {
-    return supabase.deleteQuestion(id);
+    return api.deleteQuestion(id);
   },
 };

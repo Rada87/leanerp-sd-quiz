@@ -1,9 +1,9 @@
 import type { ScoreStorage } from "./ScoreStorage";
-import { SupabaseScoreStorage } from "./SupabaseScoreStorage";
+import { ApiScoreStorage } from "./ApiScoreStorage";
 import { LocalStorageScoreStorage } from "./LocalStorageScoreStorage";
 import { FallbackScoreStorage } from "./FallbackScoreStorage";
 
 export const scoreStorage: ScoreStorage = new FallbackScoreStorage(
-  new SupabaseScoreStorage(),
+  new ApiScoreStorage(),
   new LocalStorageScoreStorage()
 );
