@@ -72,4 +72,4 @@ location /apps/leanerp-sd-quiz/ {
 
 Podrobný postup, veřejné URL a kontrakt API pro prezentaci jsou v [deploy.md](deploy.md).
 
-GitHub Actions (`.github/workflows/ci.yml`) jen lintuje a builduje na push/PR — nasazení je manuální `git pull` + `docker compose up -d --build` na VPS.
+Nasazení probíhá přímo na VPS příkazem `git pull` + `docker compose up -d --build`; samostatná GitHub Actions konfigurace se nepoužívá.
