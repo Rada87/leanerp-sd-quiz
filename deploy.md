@@ -9,7 +9,8 @@
 
 ```bash
 mkdir -p /srv/www/leanerp-sd-quiz/data
-git clone https://github.com/Rada87/leanerp-sd-quiz.git /srv/www/leanerp-sd-quiz/app
+git clone --branch codex/deploy-quiz --single-branch \
+  https://github.com/Rada87/leanerp-sd-quiz.git /srv/www/leanerp-sd-quiz/app
 cp /srv/www/leanerp-sd-quiz/app/.env.example /srv/www/leanerp-sd-quiz/.env
 cd /srv/www/leanerp-sd-quiz/app
 docker compose up -d --build
@@ -21,7 +22,7 @@ Nginx musí proxyovat `/apps/leanerp-sd-quiz/` na `127.0.0.1:8213` s trailing lo
 
 ```bash
 cd /srv/www/leanerp-sd-quiz/app
-git pull --ff-only
+git pull --ff-only origin codex/deploy-quiz
 docker compose up -d --build
 curl -fsS -o /dev/null -w '%{http_code}\n' https://srv1848295.hstgr.cloud/apps/leanerp-sd-quiz/
 curl -fsS https://srv1848295.hstgr.cloud/apps/leanerp-sd-quiz/api/leaderboard
@@ -50,3 +51,5 @@ Očekávaný stav je HTTP `200`. SQLite databáze je trvale uložena v `/srv/www
 ```
 
 Endpoint nevrací interní ID záznamů ani administrativní data.
+
+> Aktuální nasazovací větev je `codex/deploy-quiz`. Větev `main` obsahuje stejný kód, ale její push čeká na rozšíření GitHub OAuth oprávnění `workflow` pro starší změnu CI konfigurace.

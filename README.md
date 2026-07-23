@@ -48,13 +48,13 @@ Postup:
 ```bash
 mkdir -p /srv/www/leanerp-sd-quiz/{data}
 cd /srv/www/leanerp-sd-quiz
-git clone <repo-url> app
+git clone --branch codex/deploy-quiz --single-branch <repo-url> app
 cp app/.env.example .env   # uprav APP_PORT, ať nekoliduje s jinými projekty
 cd app
 docker compose up -d --build
 ```
 
-Aktualizace: `cd /srv/www/leanerp-sd-quiz/app && git pull --ff-only && docker compose up -d --build`.
+Aktualizace: `cd /srv/www/leanerp-sd-quiz/app && git pull --ff-only origin codex/deploy-quiz && docker compose up -d --build`.
 
 Docker service publikuje pouze na `127.0.0.1:<APP_PORT>` — Nginx na hostu ho zpřístupní na `/apps/leanerp-sd-quiz/`, např.:
 
