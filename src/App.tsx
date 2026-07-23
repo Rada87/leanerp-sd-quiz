@@ -41,6 +41,34 @@ function AppContent() {
     questionStorage.getQuestions().then(setLoadedQuestions).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash === "#leaderboard") {
+      quiz.goToLeaderboard();
+    }
+    const handleHashChange = () => {
+      if (window.location.hash === "#leaderboard") {
+        quiz.goToLeaderboard();
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [quiz.goToLeaderboard]);
+
+  useEffect(() => {
+    const targetHash = quiz.screen === "leaderboard" ? "#leaderboard" : "";
+    if (window.location.hash !== targetHash) {
+      if (targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search
+        );
+      }
+    }
+  }, [quiz.screen]);
+
   const handleIdleReset = useCallback(() => {
     quiz.goToStart();
   }, [quiz.goToStart]);
