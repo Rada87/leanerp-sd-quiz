@@ -118,16 +118,41 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
   );
 }
 
+const POLL_INTERVAL_MS = 3000;
+
 export function Leaderboard({ onBack }: LeaderboardProps) {
   const [scores, setScores] = useState<ScoreRecord[]>([]);
 
   const loadScores = useCallback(async () => {
     const data = await scoreStorage.getScores();
-    setScores(data);
+    setScores((prev) => {
+      const same =
+        prev.length === data.length &&
+        prev.every((r, i) => r.id === data[i].id && r.score === data[i].score);
+      return same ? prev : data;
+    });
   }, []);
 
   useEffect(() => {
     loadScores();
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        loadScores();
+      }
+    }, POLL_INTERVAL_MS);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadScores();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [loadScores]);
 
   const handleDelete = useCallback(async (id: string) => {
