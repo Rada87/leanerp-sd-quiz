@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import type { AnswerRecord, AppScreen, Question } from "../types";
 import { calculatePoints } from "../utils/scoring";
 import {
@@ -149,6 +149,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
 
 export function useQuizState() {
   const [state, dispatch] = useReducer(quizReducer, initialState);
+  const scoreSavedRef = useRef(false);
 
   const maxScore = state.questions.length * MAX_POINTS_PER_QUESTION;
   const percentage =
@@ -161,6 +162,7 @@ export function useQuizState() {
     state.answerHistory[state.answerHistory.length - 1] ?? null;
 
   const startQuiz = useCallback((playerName: string, questions: Question[]) => {
+    scoreSavedRef.current = false;
     dispatch({ type: "START_QUIZ", playerName, questions });
   }, []);
 
@@ -180,6 +182,8 @@ export function useQuizState() {
   }, []);
 
   const saveAndShowResult = useCallback(async (broadcast: boolean) => {
+    if (scoreSavedRef.current) return;
+    scoreSavedRef.current = true;
     const maxS = state.questions.length * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
     const { rank, totalPlayers } = await scoreStorage.saveScore(
@@ -200,6 +204,8 @@ export function useQuizState() {
   }, [state.score, state.playerName, state.correctAnswers, state.questions.length]);
 
   const finishQuiz = useCallback(async (broadcast: boolean) => {
+    if (scoreSavedRef.current) return;
+    scoreSavedRef.current = true;
     const total = state.questions.length;
     const maxS = total * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
