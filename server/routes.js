@@ -65,6 +65,13 @@ router.get("/scores/export", (_req, res) => {
   res.json(rows.map(scoreFromRow));
 });
 
+// Lightweight relay for live quiz-progress mirroring on the presentation
+// display. No persistence — just re-broadcast to any connected SSE clients.
+router.post("/session", (req, res) => {
+  broadcast("quiz_progress", req.body);
+  res.status(204).end();
+});
+
 router.post("/scores", (req, res) => {
   const r = req.body;
   db.prepare(`

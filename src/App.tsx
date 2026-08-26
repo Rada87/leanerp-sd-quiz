@@ -12,6 +12,7 @@ import { Leaderboard } from "./components/Leaderboard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { QuestionsEditor } from "./components/QuestionsEditor";
 import { questionStorage } from "./storage/QuestionStorage";
+import { syncPresentation } from "./utils/presentationSync";
 import type { Question } from "./types";
 
 function GearIcon() {
@@ -69,6 +70,34 @@ function AppContent() {
       }
     }
   }, [quiz.screen]);
+
+  useEffect(() => {
+    if (!settings.presentationBroadcastEnabled) return;
+    if (quiz.screen !== "quiz" || !quiz.currentQuestion) return;
+    syncPresentation({
+      type: "question",
+      playerName: quiz.playerName,
+      questionIndex: quiz.currentQuestionIndex,
+      totalQuestions: quiz.totalQuestions,
+      category: quiz.currentQuestion.category,
+      question: quiz.currentQuestion.question,
+      options: quiz.currentQuestion.options,
+      selectedAnswer: quiz.selectedAnswer,
+      isAnswered: quiz.isAnswered,
+      correctOptionId: quiz.isAnswered ? quiz.currentQuestion.correctOptionId : null,
+      score: quiz.score,
+    });
+  }, [
+    settings.presentationBroadcastEnabled,
+    quiz.screen,
+    quiz.currentQuestion,
+    quiz.playerName,
+    quiz.currentQuestionIndex,
+    quiz.totalQuestions,
+    quiz.selectedAnswer,
+    quiz.isAnswered,
+    quiz.score,
+  ]);
 
   const handleIdleReset = useCallback(() => {
     quiz.goToStart();

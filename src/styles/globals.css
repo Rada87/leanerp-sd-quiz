@@ -1,23 +1,8 @@
-:root {
-  --color-bg: #050505;
-  --color-bg-card: #0e0e0e;
-  --color-bg-card-hover: #181818;
-  --color-primary: #6dffa3;
-  --color-primary-dark: #1a4d33;
-  --color-primary-glow: rgba(109, 255, 163, 0.15);
-  --color-error: #ff4d6a;
-  --color-error-glow: rgba(255, 77, 106, 0.15);
-  --color-text: #ffffff;
-  --color-text-muted: #888888;
-  --color-border: #1e1e1e;
-
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --max-width: 850px;
-}
+/* Shared design tokens (colors, radii, .screen-card, .btn-*) live in
+   /public/theme.css so other surfaces (e.g. the Škoda Days presentation)
+   can link the same file directly instead of duplicating values. It's
+   loaded via <link> in index.html, not @import, so it stays a plain
+   cacheable HTTP request rather than a build-time dependency. */
 
 *,
 *::before,
@@ -74,68 +59,4 @@ input {
   justify-content: center;
   position: relative;
   z-index: 1;
-}
-
-.screen-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 80px var(--color-primary-glow);
-}
-
-.btn-primary {
-  background: var(--color-primary);
-  color: var(--color-bg);
-  font-size: 1.125rem;
-  font-weight: 700;
-  padding: 18px 40px;
-  border-radius: var(--radius-md);
-  min-height: 64px;
-  width: 100%;
-  letter-spacing: -0.01em;
-  transition: box-shadow 0.2s;
-}
-
-@media (hover: hover) {
-  .btn-primary:hover {
-    box-shadow: 0 0 24px var(--color-primary-glow), 0 4px 16px rgba(0, 0, 0, 0.3);
-  }
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--color-primary);
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 14px 32px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--color-primary-dark);
-  min-height: 56px;
-  width: 100%;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-@media (hover: hover) {
-  .btn-secondary:hover {
-    background: rgba(109, 255, 163, 0.06);
-    border-color: var(--color-primary);
-  }
-}
-
-.btn-danger {
-  background: transparent;
-  color: var(--color-error);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 77, 106, 0.25);
-  transition: background 0.2s;
-}
-
-@media (hover: hover) {
-  .btn-danger:hover {
-    background: var(--color-error-glow);
-  }
 }
