@@ -12,6 +12,8 @@ interface ResultScreenProps {
   correctAnswers: number;
   totalQuestions: number;
   playerName: string;
+  rank: number | null;
+  totalPlayers: number | null;
   onPlayAgain: () => void;
   onLeaderboard: () => void;
 }
@@ -23,6 +25,8 @@ export function ResultScreen({
   correctAnswers,
   totalQuestions,
   playerName,
+  rank,
+  totalPlayers,
   onPlayAgain,
   onLeaderboard,
 }: ResultScreenProps) {
@@ -176,10 +180,22 @@ export function ResultScreen({
                 fontSize: "0.9rem",
                 color: "var(--color-text-muted)",
                 lineHeight: 1.5,
+                marginBottom: rank && totalPlayers ? 12 : 0,
               }}
             >
               {tier.description}
             </div>
+            {rank && totalPlayers && (
+              <div
+                style={{
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  color: "var(--color-primary)",
+                }}
+              >
+                {rank}. místo z {totalPlayers}
+              </div>
+            )}
           </motion.div>
         )}
 

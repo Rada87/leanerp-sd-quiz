@@ -1,5 +1,5 @@
 import type { ScoreRecord } from "../types";
-import type { ScoreStorage } from "./ScoreStorage";
+import type { SaveScoreResult, ScoreStorage } from "./ScoreStorage";
 
 const apiBase = `${import.meta.env.BASE_URL}api`;
 
@@ -13,8 +13,13 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
 }
 
 export class ApiScoreStorage implements ScoreStorage {
-  async saveScore(record: ScoreRecord): Promise<void> {
-    await request("/scores", { method: "POST", body: JSON.stringify(record) });
+  async saveScore(record: ScoreRecord, options?: { broadcast?: boolean }): Promise<SaveScoreResult> {
+    const res = await request("/scores", {
+      method: "POST",
+      body: JSON.stringify({ ...record, broadcast: options?.broadcast ?? true }),
+    });
+    const data = await res.json();
+    return { rank: data.rank ?? null, totalPlayers: data.totalPlayers ?? null };
   }
 
   async getScores(): Promise<ScoreRecord[]> {

@@ -18,6 +18,8 @@ interface QuizState {
   answerHistory: AnswerRecord[];
   selectedAnswer: string | null;
   isAnswered: boolean;
+  rank: number | null;
+  totalPlayers: number | null;
 }
 
 type QuizAction =
@@ -30,6 +32,7 @@ type QuizAction =
   | { type: "HANDLE_TIMEOUT" }
   | { type: "CONTINUE_TO_NEXT" }
   | { type: "FINISH_QUIZ" }
+  | { type: "SET_RANK"; rank: number | null; totalPlayers: number | null }
   | { type: "GO_TO_LEADERBOARD" }
   | { type: "GO_TO_START" }
   | { type: "GO_TO_EDITOR" }
@@ -54,6 +57,8 @@ const initialState: QuizState = {
   answerHistory: [],
   selectedAnswer: null,
   isAnswered: false,
+  rank: null,
+  totalPlayers: null,
 };
 
 function quizReducer(state: QuizState, action: QuizAction): QuizState {
@@ -127,6 +132,8 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
     }
     case "FINISH_QUIZ":
       return { ...state, screen: "result" };
+    case "SET_RANK":
+      return { ...state, rank: action.rank, totalPlayers: action.totalPlayers };
     case "GO_TO_LEADERBOARD":
       return { ...state, screen: "leaderboard" };
     case "GO_TO_START":
@@ -172,36 +179,44 @@ export function useQuizState() {
     dispatch({ type: "CONTINUE_TO_NEXT" });
   }, []);
 
-  const saveAndShowResult = useCallback(async () => {
+  const saveAndShowResult = useCallback(async (broadcast: boolean) => {
     const maxS = state.questions.length * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
-    await scoreStorage.saveScore({
-      id: crypto.randomUUID(),
-      playerName: state.playerName,
-      score: state.score,
-      maxScore: maxS,
-      percentage: pct,
-      correctAnswers: state.correctAnswers,
-      totalQuestions: state.questions.length,
-      createdAt: new Date().toISOString(),
-    });
+    const { rank, totalPlayers } = await scoreStorage.saveScore(
+      {
+        id: crypto.randomUUID(),
+        playerName: state.playerName,
+        score: state.score,
+        maxScore: maxS,
+        percentage: pct,
+        correctAnswers: state.correctAnswers,
+        totalQuestions: state.questions.length,
+        createdAt: new Date().toISOString(),
+      },
+      { broadcast }
+    );
+    dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "CONTINUE_TO_NEXT" });
   }, [state.score, state.playerName, state.correctAnswers, state.questions.length]);
 
-  const finishQuiz = useCallback(async () => {
+  const finishQuiz = useCallback(async (broadcast: boolean) => {
     const total = state.questions.length;
     const maxS = total * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
-    await scoreStorage.saveScore({
-      id: crypto.randomUUID(),
-      playerName: state.playerName,
-      score: state.score,
-      maxScore: maxS,
-      percentage: pct,
-      correctAnswers: state.correctAnswers,
-      totalQuestions: total,
-      createdAt: new Date().toISOString(),
-    });
+    const { rank, totalPlayers } = await scoreStorage.saveScore(
+      {
+        id: crypto.randomUUID(),
+        playerName: state.playerName,
+        score: state.score,
+        maxScore: maxS,
+        percentage: pct,
+        correctAnswers: state.correctAnswers,
+        totalQuestions: total,
+        createdAt: new Date().toISOString(),
+      },
+      { broadcast }
+    );
+    dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "FINISH_QUIZ" });
   }, [state.answerHistory.length, state.questions.length, state.score, state.playerName, state.correctAnswers]);
 
@@ -233,6 +248,8 @@ export function useQuizState() {
     correctAnswers: state.correctAnswers,
     selectedAnswer: state.selectedAnswer,
     isAnswered: state.isAnswered,
+    rank: state.rank,
+    totalPlayers: state.totalPlayers,
     lastAnswer,
     answerHistory: state.answerHistory,
     startQuiz,

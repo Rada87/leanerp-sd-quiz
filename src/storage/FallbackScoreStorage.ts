@@ -1,5 +1,5 @@
 import type { ScoreRecord } from "../types";
-import type { ScoreStorage } from "./ScoreStorage";
+import type { SaveScoreResult, ScoreStorage } from "./ScoreStorage";
 
 export class FallbackScoreStorage implements ScoreStorage {
   private primary: ScoreStorage;
@@ -10,11 +10,11 @@ export class FallbackScoreStorage implements ScoreStorage {
     this.fallback = fallback;
   }
 
-  async saveScore(record: ScoreRecord): Promise<void> {
+  async saveScore(record: ScoreRecord, options?: { broadcast?: boolean }): Promise<SaveScoreResult> {
     try {
-      await this.primary.saveScore(record);
+      return await this.primary.saveScore(record, options);
     } catch {
-      await this.fallback.saveScore(record);
+      return await this.fallback.saveScore(record, options);
     }
   }
 

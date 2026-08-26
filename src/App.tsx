@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuizState } from "./hooks/useQuizState";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
-import { SettingsProvider } from "./hooks/useSettings";
+import { SettingsProvider, useSettings } from "./hooks/useSettings";
 import { KIOSK_IDLE_TIMEOUT_MS } from "./constants";
 import { BackgroundPattern } from "./components/BackgroundPattern";
 import { StartScreen } from "./components/StartScreen";
@@ -34,6 +34,7 @@ function GearIcon() {
 
 function AppContent() {
   const quiz = useQuizState();
+  const { settings } = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
 
@@ -86,7 +87,7 @@ function AppContent() {
   const handleContinue = useCallback(() => {
     const isLast = quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
     if (isLast && quiz.isAnswered) {
-      quiz.saveAndShowResult();
+      quiz.saveAndShowResult(settings.presentationBroadcastEnabled);
     } else {
       quiz.continueToNext();
     }
@@ -96,7 +97,12 @@ function AppContent() {
     quiz.isAnswered,
     quiz.saveAndShowResult,
     quiz.continueToNext,
+    settings.presentationBroadcastEnabled,
   ]);
+
+  const handleFinish = useCallback(() => {
+    quiz.finishQuiz(settings.presentationBroadcastEnabled);
+  }, [quiz.finishQuiz, settings.presentationBroadcastEnabled]);
 
   return (
     <div
@@ -177,7 +183,7 @@ function AppContent() {
               onSelectAnswer={quiz.selectAnswer}
               onTimeout={quiz.handleTimeout}
               onContinue={handleContinue}
-              onFinish={quiz.finishQuiz}
+              onFinish={handleFinish}
             />
           </motion.div>
         )}
@@ -197,6 +203,8 @@ function AppContent() {
               correctAnswers={quiz.correctAnswers}
               totalQuestions={quiz.totalQuestions}
               playerName={quiz.playerName}
+              rank={quiz.rank}
+              totalPlayers={quiz.totalPlayers}
               onPlayAgain={quiz.playAgain}
               onLeaderboard={quiz.goToLeaderboard}
             />

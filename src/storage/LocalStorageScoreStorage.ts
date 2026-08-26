@@ -1,9 +1,9 @@
 import { LEADERBOARD_TOP_N, STORAGE_KEY } from "../constants";
 import type { ScoreRecord } from "../types";
-import type { ScoreStorage } from "./ScoreStorage";
+import type { SaveScoreResult, ScoreStorage } from "./ScoreStorage";
 
 export class LocalStorageScoreStorage implements ScoreStorage {
-  async saveScore(record: ScoreRecord): Promise<void> {
+  async saveScore(record: ScoreRecord): Promise<SaveScoreResult> {
     try {
       const scores = await this.getScores();
       scores.push(record);
@@ -11,6 +11,7 @@ export class LocalStorageScoreStorage implements ScoreStorage {
     } catch {
       // QuotaExceededError or other write failure — silently drop
     }
+    return { rank: null, totalPlayers: null };
   }
 
   async getScores(): Promise<ScoreRecord[]> {

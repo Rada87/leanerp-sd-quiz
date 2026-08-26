@@ -13,7 +13,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor }: SettingsPanelProps) {
-  const { settings, setSoundEnabled } = useSettings();
+  const { settings, setSoundEnabled, setPresentationBroadcastEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
 
@@ -137,6 +137,44 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
               </button>
             </div>
 
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px 0",
+                borderBottom: "1px solid var(--color-border)",
+              }}
+            >
+              <span style={{ fontSize: "0.9rem" }}>Promítat na hlavní obrazovku</span>
+              <button
+                onClick={() => setPresentationBroadcastEnabled(!settings.presentationBroadcastEnabled)}
+                style={{
+                  width: 44,
+                  height: 26,
+                  borderRadius: 13,
+                  background: settings.presentationBroadcastEnabled
+                    ? "var(--color-primary)"
+                    : "var(--color-border)",
+                  position: "relative",
+                  transition: "background 0.2s",
+                }}
+              >
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: "#fff",
+                    position: "absolute",
+                    top: 3,
+                    left: settings.presentationBroadcastEnabled ? 21 : 3,
+                    transition: "left 0.2s",
+                  }}
+                />
+              </button>
+            </div>
+
             <div style={{ marginTop: 16 }}>
               <div
                 style={{
@@ -175,6 +213,23 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                 >
                   View Leaderboard
                 </button>
+                <a
+                  href="https://srv1848295.hstgr.cloud/www/leanerp-skodadays-2026/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary"
+                  style={{
+                    padding: "10px 16px",
+                    minHeight: "auto",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textDecoration: "none",
+                  }}
+                >
+                  Presentation
+                </a>
                 <button
                   className="btn-secondary"
                   onClick={handleExport}

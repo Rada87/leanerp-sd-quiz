@@ -1,7 +1,12 @@
 import type { ScoreRecord } from "../types";
 
+export interface SaveScoreResult {
+  rank: number | null;
+  totalPlayers: number | null;
+}
+
 export interface ScoreStorage {
-  saveScore(record: ScoreRecord): Promise<void>;
+  saveScore(record: ScoreRecord, options?: { broadcast?: boolean }): Promise<SaveScoreResult>;
   getScores(): Promise<ScoreRecord[]>;
   deleteScore(id: string): Promise<void>;
   clearScores(): Promise<void>;

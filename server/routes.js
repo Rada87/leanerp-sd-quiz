@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "./db.js";
+import { broadcast } from "./events.js";
 
 const LEADERBOARD_TOP_N = 10;
 
@@ -70,7 +71,28 @@ router.post("/scores", (req, res) => {
     INSERT INTO scores (id, player_name, score, max_score, percentage, correct_answers, total_questions, created_at)
     VALUES (@id, @playerName, @score, @maxScore, @percentage, @correctAnswers, @totalQuestions, @createdAt)
   `).run(r);
-  res.status(201).json({ ok: true });
+
+  const { rank } = db
+    .prepare(
+      "SELECT COUNT(*) + 1 AS rank FROM scores WHERE score > @score OR (score = @score AND created_at < @createdAt)"
+    )
+    .get(r);
+  const { totalPlayers } = db.prepare("SELECT COUNT(*) AS totalPlayers FROM scores").get();
+
+  if (req.body.broadcast !== false) {
+    broadcast("quiz_completed", {
+      playerName: r.playerName,
+      score: r.score,
+      maxScore: r.maxScore,
+      percentage: r.percentage,
+      correctAnswers: r.correctAnswers,
+      totalQuestions: r.totalQuestions,
+      rank,
+      totalPlayers,
+    });
+  }
+
+  res.status(201).json({ ok: true, rank, totalPlayers });
 });
 
 router.post("/scores/import", (req, res) => {
