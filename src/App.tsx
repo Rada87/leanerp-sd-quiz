@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useQuizState } from "./hooks/useQuizState";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
 import { SettingsProvider, useSettings } from "./hooks/useSettings";
-import { KIOSK_IDLE_TIMEOUT_MS } from "./constants";
+import { KIOSK_IDLE_TIMEOUT_MS, QUESTION_TIME_SECONDS } from "./constants";
 import { BackgroundPattern } from "./components/BackgroundPattern";
 import { StartScreen } from "./components/StartScreen";
 import { QuizScreen } from "./components/QuizScreen";
@@ -82,6 +82,7 @@ function AppContent() {
       category: quiz.currentQuestion.category,
       question: quiz.currentQuestion.question,
       options: quiz.currentQuestion.options,
+      questionTimeSeconds: QUESTION_TIME_SECONDS,
       selectedAnswer: quiz.selectedAnswer,
       isAnswered: quiz.isAnswered,
       correctOptionId: quiz.isAnswered ? quiz.currentQuestion.correctOptionId : null,
