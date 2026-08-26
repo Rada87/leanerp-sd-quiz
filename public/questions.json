@@ -6,7 +6,7 @@
     "options": [
       {
         "id": "a",
-        "text": "To manage physical stock movements and storage locations"
+        "text": "To manage stock movements and storage locations"
       },
       {
         "id": "b",
@@ -18,12 +18,12 @@
       }
     ],
     "correctOptionId": "a",
-    "explanation": "Warehouse Management supports stock placement, picking, movements and warehouse execution."
+    "explanation": "Warehouse Management tracks stock and locations, and controls warehouse work like storing, picking, and moving goods."
   },
   {
     "id": "q2",
     "category": "Material Flow",
-    "question": "What does a 'Goods Receipt' process typically trigger in SAP?",
+    "question": "What does a 'Goods Receipt' usually start in SAP?",
     "options": [
       {
         "id": "a",
@@ -31,7 +31,7 @@
       },
       {
         "id": "b",
-        "text": "Stock levels are updated and quality inspection may start"
+        "text": "Stock is updated and a quality check may start"
       },
       {
         "id": "c",
@@ -39,20 +39,20 @@
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Goods Receipt updates inventory quantities and can trigger quality inspections or automatic putaway."
+    "explanation": "A Goods Receipt updates the stock level and can start a quality check or storage."
   },
   {
     "id": "q3",
     "category": "Production Supply",
-    "question": "In a just-in-sequence (JIS) production environment, what is the key principle?",
+    "question": "What is the main idea of just-in-sequence (JIS) production?",
     "options": [
       {
         "id": "a",
-        "text": "Parts are delivered in the exact order of assembly"
+        "text": "Parts arrive in the exact order they are needed"
       },
       {
         "id": "b",
-        "text": "All parts are stored in a central warehouse first"
+        "text": "All parts are stored in one big warehouse first"
       },
       {
         "id": "c",
@@ -60,7 +60,7 @@
       }
     ],
     "correctOptionId": "a",
-    "explanation": "JIS ensures components arrive at the production line in the exact sequence they are needed for assembly."
+    "explanation": "In JIS, parts arrive at the line in the exact order they are needed for assembly."
   },
   {
     "id": "q4",
@@ -69,11 +69,11 @@
     "options": [
       {
         "id": "a",
-        "text": "A maintenance request for equipment"
+        "text": "A maintenance request for a machine"
       },
       {
         "id": "b",
-        "text": "A physical unit of packaging with its contents tracked together"
+        "text": "A packed unit where the goods and packaging are tracked together"
       },
       {
         "id": "c",
@@ -81,33 +81,33 @@
       }
     ],
     "correctOptionId": "b",
-    "explanation": "A Handling Unit combines packaging material with the goods it contains, enabling tracking as a single unit."
+    "explanation": "A Handling Unit is packaging plus the goods inside it, tracked as one unit."
   },
   {
     "id": "q5",
     "category": "Inventory Accuracy",
-    "question": "What is the purpose of cycle counting in warehouse management?",
+    "question": "What is the purpose of cycle counting in a warehouse?",
     "options": [
       {
         "id": "a",
-        "text": "To count the number of employees per shift"
+        "text": "To count the number of workers per shift"
       },
       {
         "id": "b",
-        "text": "To continuously verify inventory accuracy without full stocktake"
+        "text": "To check stock accuracy regularly, without a full count"
       },
       {
         "id": "c",
-        "text": "To measure production cycle times"
+        "text": "To measure how fast production runs"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Cycle counting is a regular, partial inventory check that maintains stock accuracy throughout the year."
+    "explanation": "Cycle counting checks part of the stock regularly, to keep the numbers correct all year."
   },
   {
     "id": "q6",
     "category": "Outbound Delivery",
-    "question": "Which step typically comes first in the outbound delivery process?",
+    "question": "Which step usually comes first in an outbound delivery?",
     "options": [
       {
         "id": "a",
@@ -119,53 +119,53 @@
       },
       {
         "id": "c",
-        "text": "Issuing the transport invoice"
+        "text": "Sending the transport invoice"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Picking is the first physical step — goods are collected from their storage locations before packing and loading."
+    "explanation": "Picking is the first step — goods are collected from storage before packing and loading."
   },
   {
     "id": "q7",
     "category": "LEAN ERP",
-    "question": "What does 'LEAN' in LEAN ERP primarily emphasize?",
+    "question": "What does 'LEAN' in LEAN ERP mainly focus on?",
     "options": [
       {
         "id": "a",
-        "text": "Using the least amount of software modules"
+        "text": "Using as few software modules as possible"
       },
       {
         "id": "b",
-        "text": "Eliminating waste and optimizing process efficiency"
+        "text": "Removing waste and making processes more efficient"
       },
       {
         "id": "c",
-        "text": "Running ERP on minimal hardware"
+        "text": "Running the ERP on very small hardware"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "LEAN principles focus on maximizing value while minimizing waste across all logistics and production processes."
+    "explanation": "LEAN means getting the most value with low cost and effort."
   },
   {
     "id": "q8",
     "category": "Packaging",
-    "question": "Why is packaging specification important in automotive logistics?",
+    "question": "Why is packaging important in automotive logistics?",
     "options": [
       {
         "id": "a",
-        "text": "It only affects the visual appearance of products"
+        "text": "It only affects how the product looks"
       },
       {
         "id": "b",
-        "text": "It ensures parts are protected, properly labeled, and fit the transport units"
+        "text": "It protects the parts and fits the transport units"
       },
       {
         "id": "c",
-        "text": "It is required only for export shipments"
+        "text": "It is only needed for export shipments"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Packaging specs ensure parts arrive undamaged, are traceable, and fit standardized containers and transport."
+    "explanation": "Good packaging keeps parts safe, labeled correctly, and easy to move and store."
   },
   {
     "id": "q9",
@@ -174,11 +174,11 @@
     "options": [
       {
         "id": "a",
-        "text": "It eliminates the need for a warehouse"
+        "text": "It removes the need for a warehouse"
       },
       {
         "id": "b",
-        "text": "It reduces manual errors and increases throughput speed"
+        "text": "It reduces mistakes and makes work faster"
       },
       {
         "id": "c",
@@ -186,49 +186,49 @@
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Automation via SAP reduces human errors, speeds up processes, and provides real-time visibility into operations."
+    "explanation": "Automation reduces human mistakes and speeds up the work, with better visibility of what is happening."
   },
   {
     "id": "q10",
     "category": "Inbound Delivery",
-    "question": "What information does an ASN (Advance Shipping Notification) provide?",
+    "question": "What information does an ASN (Advance Shipping Notification) give?",
     "options": [
       {
         "id": "a",
-        "text": "Details about incoming shipments before they arrive"
+        "text": "Details about goods that are coming, before they arrive"
       },
       {
         "id": "b",
-        "text": "The annual shipping budget forecast"
+        "text": "The yearly shipping budget plan"
       },
       {
         "id": "c",
-        "text": "Employee shift schedules for the dock"
+        "text": "Work shift times for the loading dock"
       }
     ],
     "correctOptionId": "a",
-    "explanation": "An ASN informs the receiving warehouse about what goods are coming, in what quantities, and when to expect them."
+    "explanation": "An ASN tells the warehouse what goods are coming, how many, and when."
   },
   {
     "id": "q11",
     "category": "Automotive Production",
-    "question": "What does 'takt time' mean in the context of automotive production?",
+    "question": "What does 'takt time' mean in car production?",
     "options": [
       {
         "id": "a",
-        "text": "The time it takes to repair a defective vehicle"
+        "text": "The time needed to fix a broken car"
       },
       {
         "id": "b",
-        "text": "The rate at which a finished product must be produced to meet demand"
+        "text": "The time given for work at one station on the line"
       },
       {
         "id": "c",
-        "text": "The time required to change a production line tool"
+        "text": "The time needed to change a tool on the line"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "Takt time synchronizes production pace with customer demand — it is the heartbeat of the production line."
+    "explanation": "Takt time sets the speed of the line — it is the rhythm of production."
   },
   {
     "id": "q12",
@@ -237,18 +237,144 @@
     "options": [
       {
         "id": "a",
-        "text": "To transfer money between company accounts"
+        "text": "To move money between company accounts"
       },
       {
         "id": "b",
-        "text": "To instruct the physical movement of goods within a warehouse"
+        "text": "To tell the warehouse to move goods from one place to another"
       },
       {
         "id": "c",
-        "text": "To transfer employees between departments"
+        "text": "To move employees between departments"
       }
     ],
     "correctOptionId": "b",
-    "explanation": "A Transfer Order is the execution document that triggers and records stock movements between storage bins."
+    "explanation": "A Transfer Order tells the warehouse to move stock, and it records this movement."
+  },
+  {
+    "id": "q13",
+    "category": "LEAN ERP",
+    "question": "What is the total production capacity of all factories using LEAN ERP?",
+    "options": [
+      {
+        "id": "a",
+        "text": "About 150,000 cars per year"
+      },
+      {
+        "id": "b",
+        "text": "About 500,000 cars per year"
+      },
+      {
+        "id": "c",
+        "text": "About 50,000 cars per year"
+      }
+    ],
+    "correctOptionId": "a",
+    "explanation": "The factories that use LEAN ERP produce about 150,000 cars per year in total."
+  },
+  {
+    "id": "q14",
+    "category": "LEAN ERP",
+    "question": "How many users use LEAN ERP every day on average?",
+    "options": [
+      {
+        "id": "a",
+        "text": "About 10"
+      },
+      {
+        "id": "b",
+        "text": "About 100"
+      },
+      {
+        "id": "c",
+        "text": "About 1,000"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "On average, about 100 users use LEAN ERP every day."
+  },
+  {
+    "id": "q15",
+    "category": "LEAN ERP",
+    "question": "How many group brands use LEAN ERP in their factories abroad?",
+    "options": [
+      {
+        "id": "a",
+        "text": "1"
+      },
+      {
+        "id": "b",
+        "text": "3"
+      },
+      {
+        "id": "c",
+        "text": "5"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "3 group brands use LEAN ERP in their factories abroad."
+  },
+  {
+    "id": "q16",
+    "category": "LEAN ERP",
+    "question": "Which anniversary will the LEAN ERP product team celebrate next year?",
+    "options": [
+      {
+        "id": "a",
+        "text": "5 years"
+      },
+      {
+        "id": "b",
+        "text": "10 years"
+      },
+      {
+        "id": "c",
+        "text": "15 years"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "Next year, the LEAN ERP product team will celebrate its 10th anniversary."
+  },
+  {
+    "id": "q17",
+    "category": "LEAN ERP",
+    "question": "How many warehouse work orders does LEAN ERP process on average?",
+    "options": [
+      {
+        "id": "a",
+        "text": "About 500"
+      },
+      {
+        "id": "b",
+        "text": "About 5,000"
+      },
+      {
+        "id": "c",
+        "text": "About 50,000"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "LEAN ERP processes about 5,000 warehouse work orders on average."
+  },
+  {
+    "id": "q18",
+    "category": "LEAN ERP",
+    "question": "How long does it usually take to install the LEAN ERP system?",
+    "options": [
+      {
+        "id": "a",
+        "text": "6 weeks"
+      },
+      {
+        "id": "b",
+        "text": "6 months"
+      },
+      {
+        "id": "c",
+        "text": "2 years"
+      }
+    ],
+    "correctOptionId": "b",
+    "explanation": "Installing the LEAN ERP system usually takes about 6 months."
   }
 ]

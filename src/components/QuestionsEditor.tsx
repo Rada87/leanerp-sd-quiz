@@ -280,19 +280,21 @@ export function QuestionsEditor({ onBack }: Props) {
                 transform: "translate(-50%, -50%)",
                 width: "min(640px, 95vw)",
                 maxHeight: "90dvh",
-                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
                 background: "var(--color-bg-card)",
                 border: "1px solid var(--color-border)",
                 borderRadius: "var(--radius-lg)",
-                padding: 28,
                 zIndex: 301,
+                overflow: "hidden",
               }}
             >
+              <div style={{ padding: "28px 28px 0", overflowY: "auto" }}>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 20 }}>
                 {questions.find(q => q.id === editingQuestion.id) ? "Edit Question" : "New Question"}
               </h3>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 28 }}>
                 <div>
                   <label style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "block", marginBottom: 6 }}>Category</label>
                   <input style={input} value={editingQuestion.category} onChange={e => setEditingQuestion(prev => prev ? { ...prev, category: e.target.value } : prev)} placeholder="e.g. Warehouse Management" />
@@ -351,24 +353,34 @@ export function QuestionsEditor({ onBack }: Props) {
                     placeholder="Shown after answering"
                   />
                 </div>
+              </div>
+              </div>
 
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-                  <button
-                    className="btn-secondary"
-                    onClick={() => setEditingQuestion(null)}
-                    style={{ padding: "10px 20px", minHeight: "auto", fontSize: "0.9rem" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn-primary"
-                    onClick={handleSave}
-                    disabled={saving}
-                    style={{ padding: "10px 24px", minHeight: "auto", fontSize: "0.9rem", width: "auto" }}
-                  >
-                    {saving ? "Saving…" : "Save"}
-                  </button>
-                </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  justifyContent: "flex-end",
+                  padding: "16px 28px",
+                  borderTop: "1px solid var(--color-border)",
+                  flexShrink: 0,
+                }}
+              >
+                <button
+                  className="btn-secondary"
+                  onClick={() => setEditingQuestion(null)}
+                  style={{ padding: "10px 20px", minHeight: "auto", fontSize: "0.9rem" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{ padding: "10px 24px", minHeight: "auto", fontSize: "0.9rem", width: "auto" }}
+                >
+                  {saving ? "Saving…" : "Save"}
+                </button>
               </div>
             </motion.div>
           </>
