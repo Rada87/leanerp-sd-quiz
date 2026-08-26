@@ -193,7 +193,7 @@ export function ResultScreen({
                   color: "var(--color-primary)",
                 }}
               >
-                {rank}. místo z {totalPlayers}
+                Rank #{rank} of {totalPlayers}
               </div>
             )}
           </motion.div>

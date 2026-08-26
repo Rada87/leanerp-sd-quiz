@@ -146,7 +146,7 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                 borderBottom: "1px solid var(--color-border)",
               }}
             >
-              <span style={{ fontSize: "0.9rem" }}>Promítat na hlavní obrazovku</span>
+              <span style={{ fontSize: "0.9rem" }}>Cast to main screen</span>
               <button
                 onClick={() => setPresentationBroadcastEnabled(!settings.presentationBroadcastEnabled)}
                 style={{
