@@ -86,6 +86,8 @@ function AppContent() {
       selectedAnswer: quiz.selectedAnswer,
       isAnswered: quiz.isAnswered,
       correctOptionId: quiz.isAnswered ? quiz.currentQuestion.correctOptionId : null,
+      explanation: quiz.isAnswered ? quiz.currentQuestion.explanation : null,
+      pointsEarned: quiz.isAnswered ? (quiz.lastAnswer?.pointsEarned ?? 0) : null,
       score: quiz.score,
     });
   }, [
@@ -97,6 +99,7 @@ function AppContent() {
     quiz.totalQuestions,
     quiz.selectedAnswer,
     quiz.isAnswered,
+    quiz.lastAnswer,
     quiz.score,
   ]);
 
