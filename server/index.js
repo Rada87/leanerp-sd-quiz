@@ -16,8 +16,19 @@ app.get("/api/events", (req, res) => {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
+    // Respected by nginx and several corporate proxies; without it an
+    // intermediary may buffer the stream, and the browser then never sees
+    // the response headers, so EventSource is stuck on CONNECTING forever.
+    "X-Accel-Buffering": "no",
   });
   res.flushHeaders();
+
+  // Proxies that buffer by size rather than by header still hold the stream
+  // until enough bytes arrive. This padding comment pushes the response past
+  // the usual thresholds straight away so the client can open the stream.
+  res.write(`:${" ".repeat(2048)}\n\n`);
+  res.write("retry: 3000\n\n");
+
   addClient(res);
   req.on("close", () => removeClient(res));
 });

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "./db.js";
-import { broadcast } from "./events.js";
+import { broadcast, getLatest } from "./events.js";
 import * as queue from "./queue.js";
 
 const LEADERBOARD_TOP_N = 10;
@@ -64,6 +64,14 @@ router.get("/leaderboard", (_req, res) => {
 router.get("/scores/export", (_req, res) => {
   const rows = db.prepare("SELECT * FROM scores ORDER BY score DESC").all();
   res.json(rows.map(scoreFromRow));
+});
+
+// Same information the event stream carries, as a plain request. A network
+// that buffers long-lived responses leaves a presentation stuck on an
+// unusable stream, and it can poll this instead.
+router.get("/state", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(getLatest());
 });
 
 // --- Play queue (one player at a time) ---
