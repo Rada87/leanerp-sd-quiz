@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSettings } from "../hooks/useSettings";
+import { APP_VERSION } from "../constants";
 import { scoreStorage } from "../storage";
 import type { ScoreRecord } from "../types";
 
@@ -245,6 +246,21 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                   {status}
                 </motion.div>
               )}
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                paddingTop: 14,
+                borderTop: "1px solid var(--color-border)",
+                fontSize: "0.7rem",
+                letterSpacing: "0.06em",
+                color: "var(--color-text-muted)",
+                textAlign: "center",
+                opacity: 0.7,
+              }}
+            >
+              v{APP_VERSION}
             </div>
           </motion.div>
         </>
