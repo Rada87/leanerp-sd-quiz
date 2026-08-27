@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuizState } from "./hooks/useQuizState";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
@@ -11,6 +11,9 @@ import { ResultScreen } from "./components/ResultScreen";
 import { Leaderboard } from "./components/Leaderboard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { QuestionsEditor } from "./components/QuestionsEditor";
+import { WaitingScreen } from "./components/WaitingScreen";
+import { useQueue } from "./hooks/useQueue";
+import { getClientId } from "./utils/clientId";
 import { questionStorage } from "./storage/QuestionStorage";
 import { syncPresentation } from "./utils/presentationSync";
 import type { Question } from "./types";
@@ -35,8 +38,12 @@ function GearIcon() {
 
 function AppContent() {
   const quiz = useQuizState();
+  const queue = useQueue();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
+  const [pendingName, setPendingName] = useState("");
+  const clientId = useRef(getClientId()).current;
+  const isQueued = queue.snapshot.state === "waiting" || queue.snapshot.state === "ready";
 
   useEffect(() => {
     questionStorage.getQuestions().then(setLoadedQuestions).catch(() => {});
@@ -100,6 +107,15 @@ function AppContent() {
     quiz.score,
   ]);
 
+  // The slot belongs to whoever is actually answering questions — hand it to
+  // the next player as soon as the quiz itself is over, while this player
+  // still reads their result. Only the active player releases: someone
+  // sitting in line is also on the "start" screen and must keep their place.
+  useEffect(() => {
+    if (queue.snapshot.state !== "active") return;
+    if (quiz.screen === "result" || quiz.screen === "start") queue.leave();
+  }, [quiz.screen, queue.snapshot.state, queue.leave]);
+
   const handleIdleReset = useCallback(() => {
     quiz.goToStart();
   }, [quiz.goToStart]);
@@ -110,9 +126,26 @@ function AppContent() {
     quiz.screen === "result" || quiz.screen === "leaderboard"
   );
 
-  const handleStart = useCallback((name: string) => {
-    quiz.startQuiz(name, loadedQuestions);
-  }, [quiz.startQuiz, loadedQuestions]);
+  // Ask the server for the play slot first. If the queue is unreachable we
+  // start anyway — a queue outage must never stop people from playing.
+  const handleStart = useCallback(async (name: string) => {
+    setPendingName(name);
+    const result = await queue.join(name);
+    if (!result || result.state === "active") {
+      quiz.startQuiz(name, loadedQuestions);
+    }
+  }, [queue.join, quiz.startQuiz, loadedQuestions]);
+
+  const handleClaimTurn = useCallback(async () => {
+    const result = await queue.claim();
+    if (!result || result.state === "active") {
+      quiz.startQuiz(pendingName, loadedQuestions);
+    }
+  }, [queue.claim, quiz.startQuiz, pendingName, loadedQuestions]);
+
+  const handleLeaveQueue = useCallback(() => {
+    queue.leave();
+  }, [queue.leave]);
 
   const handleContinue = useCallback(() => {
     const isLast = quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
@@ -180,7 +213,24 @@ function AppContent() {
       />
 
       <AnimatePresence mode="wait">
-        {quiz.screen === "start" && (
+        {quiz.screen === "start" && isQueued && (
+          <motion.div
+            key="waiting"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <WaitingScreen
+              snapshot={queue.snapshot}
+              clientId={clientId}
+              onStart={handleClaimTurn}
+              onLeave={handleLeaveQueue}
+            />
+          </motion.div>
+        )}
+
+        {quiz.screen === "start" && !isQueued && (
           <motion.div
             key="start"
             initial={{ opacity: 0 }}

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "./db.js";
 import { broadcast } from "./events.js";
+import * as queue from "./queue.js";
 
 const LEADERBOARD_TOP_N = 10;
 
@@ -64,6 +65,27 @@ router.get("/scores/export", (_req, res) => {
   const rows = db.prepare("SELECT * FROM scores ORDER BY score DESC").all();
   res.json(rows.map(scoreFromRow));
 });
+
+// --- Play queue (one player at a time) ---
+
+function clientIdOf(req) {
+  const id = req.body?.clientId ?? req.query?.clientId;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
+function queueHandler(fn) {
+  return (req, res) => {
+    const clientId = clientIdOf(req);
+    if (!clientId) return res.status(400).json({ error: "clientId required" });
+    res.json(fn(clientId, req));
+  };
+}
+
+router.get("/queue", queueHandler((id) => queue.getState(id)));
+router.post("/queue/join", queueHandler((id, req) => queue.join(id, req.body?.playerName)));
+router.post("/queue/claim", queueHandler((id) => queue.claim(id)));
+router.post("/queue/heartbeat", queueHandler((id) => queue.heartbeat(id)));
+router.post("/queue/leave", queueHandler((id) => queue.leave(id)));
 
 // Lightweight relay for live quiz-progress mirroring on the presentation
 // display. No persistence — just re-broadcast to any connected SSE clients.
