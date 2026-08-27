@@ -10,8 +10,12 @@ const PAD = " ".repeat(2048);
 // poll for the same information instead. Each entry carries the sequence
 // number it was published at, which is how a poller tells "new" from
 // "already seen" without needing a clock.
-let seq = 0;
-const latest = { seq: 0, progress: null, completed: null, queue: null };
+// Keep sequence ids increasing across normal process restarts as well. A
+// long-lived presentation may retain ids from the previous server instance;
+// restarting at zero would make it reject every new event as a duplicate.
+// The x1000 headroom allows bursts without approaching Number.MAX_SAFE_INTEGER.
+let seq = Date.now() * 1000;
+const latest = { seq, progress: null, completed: null, queue: null };
 
 setInterval(() => {
   for (const res of clients) res.write(`:${PAD}\n\n`);
@@ -36,7 +40,10 @@ export function broadcast(type, data) {
   // The trailing comment pads every event past the buffer a proxy may be
   // holding it in. Without it an intermediary accumulates these small
   // messages and releases them late, in a batch, or not at all.
-  const payload = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n:${PAD}\n\n`;
+  // The SSE id is the same global sequence exposed by /api/state. The
+  // presentation can therefore deduplicate an event that arrives through
+  // both SSE and polling during a transport handover.
+  const payload = `id: ${entry.seq}\nevent: ${type}\ndata: ${JSON.stringify(data)}\n\n:${PAD}\n\n`;
   for (const res of clients) res.write(payload);
 }
 
