@@ -1,18 +1,23 @@
 const KEY = "leanerp-quiz-client-id";
 
 /**
- * Stable per-tablet identity for the play queue. Persisted so a reload
- * mid-quiz keeps the player's slot instead of sending them to the back.
+ * Per-tab identity for the play queue.
+ *
+ * Deliberately sessionStorage, not localStorage: localStorage is shared by
+ * every tab of a browser, so two tabs claimed the same identity and each
+ * join handed the slot from one to the other, letting both play at once.
+ * sessionStorage is scoped to the tab yet survives a reload, so a player
+ * who refreshes mid-quiz still keeps their slot.
  */
 export function getClientId(): string {
   try {
-    const existing = localStorage.getItem(KEY);
+    const existing = sessionStorage.getItem(KEY);
     if (existing) return existing;
     const id = crypto.randomUUID();
-    localStorage.setItem(KEY, id);
+    sessionStorage.setItem(KEY, id);
     return id;
   } catch {
-    // Private mode / storage disabled — a per-session id still gates fine.
+    // Private mode / storage disabled — a per-instance id still gates fine.
     return crypto.randomUUID();
   }
 }
