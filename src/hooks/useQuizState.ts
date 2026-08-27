@@ -1,4 +1,5 @@
 import { useCallback, useReducer, useRef } from "react";
+import { getClientId } from "../utils/clientId";
 import type { AnswerRecord, AppScreen, Question } from "../types";
 import { calculatePoints } from "../utils/scoring";
 import {
@@ -150,6 +151,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
 export function useQuizState() {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const scoreSavedRef = useRef(false);
+  const clientId = useRef(getClientId()).current;
 
   const maxScore = state.questions.length * MAX_POINTS_PER_QUESTION;
   const percentage =
@@ -189,6 +191,7 @@ export function useQuizState() {
     const { rank, totalPlayers } = await scoreStorage.saveScore(
       {
         id: crypto.randomUUID(),
+        clientId,
         playerName: state.playerName,
         score: state.score,
         maxScore: maxS,
@@ -201,7 +204,7 @@ export function useQuizState() {
     );
     dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "CONTINUE_TO_NEXT" });
-  }, [state.score, state.playerName, state.correctAnswers, state.questions.length]);
+  }, [clientId, state.score, state.playerName, state.correctAnswers, state.questions.length]);
 
   const finishQuiz = useCallback(async (broadcast: boolean) => {
     if (scoreSavedRef.current) return;
@@ -212,6 +215,7 @@ export function useQuizState() {
     const { rank, totalPlayers } = await scoreStorage.saveScore(
       {
         id: crypto.randomUUID(),
+        clientId,
         playerName: state.playerName,
         score: state.score,
         maxScore: maxS,
@@ -224,7 +228,7 @@ export function useQuizState() {
     );
     dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "FINISH_QUIZ" });
-  }, [state.answerHistory.length, state.questions.length, state.score, state.playerName, state.correctAnswers]);
+  }, [clientId, state.answerHistory.length, state.questions.length, state.score, state.playerName, state.correctAnswers]);
 
   const goToLeaderboard = useCallback(() => {
     dispatch({ type: "GO_TO_LEADERBOARD" });

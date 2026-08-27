@@ -22,6 +22,7 @@ export interface QuestionStorage {
 
 export interface ScoreRecord {
   id: string;
+  clientId?: string;
   playerName: string;
   score: number;
   maxScore: number;

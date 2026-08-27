@@ -81,6 +81,7 @@ function AppContent() {
     if (quiz.screen !== "quiz" || !quiz.currentQuestion) return;
     syncPresentation({
       type: "question",
+      clientId,
       playerName: quiz.playerName,
       questionIndex: quiz.currentQuestionIndex,
       totalQuestions: quiz.totalQuestions,
@@ -105,6 +106,7 @@ function AppContent() {
     quiz.isAnswered,
     quiz.lastAnswer,
     quiz.score,
+    clientId,
   ]);
 
   // The slot belongs to whoever is actually answering questions — hand it to

@@ -118,6 +118,7 @@ router.post("/scores", (req, res) => {
 
   if (req.body.broadcast !== false) {
     broadcast("quiz_completed", {
+      clientId: r.clientId,
       playerName: r.playerName,
       score: r.score,
       maxScore: r.maxScore,
