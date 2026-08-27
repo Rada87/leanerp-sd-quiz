@@ -29,6 +29,8 @@ const emptySnapshot: QueueSnapshot = {
   waitingCount: 0,
 };
 
+const LOG = "[quiz-queue]";
+
 async function post(path: string, body: Record<string, unknown>): Promise<QueueSnapshot | null> {
   try {
     const res = await fetch(`${apiBase}${path}`, {
@@ -36,9 +38,17 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!res.ok) return null;
-    return (await res.json()) as QueueSnapshot;
-  } catch {
+    if (!res.ok) {
+      console.warn(`${LOG} POST ${path} rejected with ${res.status} — queue gate inactive.`);
+      return null;
+    }
+    const snapshot = (await res.json()) as QueueSnapshot;
+    if (path !== "/queue/heartbeat") {
+      console.log(`${LOG} ${path} -> state=${snapshot.state} position=${snapshot.position}`);
+    }
+    return snapshot;
+  } catch (error) {
+    console.warn(`${LOG} POST ${path} failed — queue gate inactive, letting play continue.`, error);
     return null;
   }
 }
@@ -80,6 +90,11 @@ export function useQueue() {
   // Live position updates ride the same SSE stream the presentation uses.
   useEffect(() => {
     const source = new EventSource(`${apiBase}/events`);
+    source.onopen = () => console.log(`${LOG} queue stream OPEN.`);
+    source.onerror = () =>
+      console.warn(
+        `${LOG} queue stream error (readyState=${source.readyState}) — live position updates may stall.`
+      );
     const onQueueState = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);

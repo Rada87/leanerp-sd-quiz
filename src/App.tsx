@@ -131,6 +131,11 @@ function AppContent() {
   const handleStart = useCallback(async (name: string) => {
     setPendingName(name);
     const result = await queue.join(name);
+    if (!result) {
+      console.warn(
+        "[quiz-queue] no answer from the queue — starting anyway. Two players CAN end up playing at once while this persists."
+      );
+    }
     if (!result || result.state === "active") {
       quiz.startQuiz(name, loadedQuestions);
     }
