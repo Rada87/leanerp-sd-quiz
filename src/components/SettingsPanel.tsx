@@ -13,7 +13,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor }: SettingsPanelProps) {
-  const { settings, setSoundEnabled, setPresentationBroadcastEnabled } = useSettings();
+  const { settings, setSoundEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
 
@@ -131,44 +131,6 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                     position: "absolute",
                     top: 3,
                     left: settings.soundEnabled ? 21 : 3,
-                    transition: "left 0.2s",
-                  }}
-                />
-              </button>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 0",
-                borderBottom: "1px solid var(--color-border)",
-              }}
-            >
-              <span style={{ fontSize: "0.9rem" }}>Cast to main screen</span>
-              <button
-                onClick={() => setPresentationBroadcastEnabled(!settings.presentationBroadcastEnabled)}
-                style={{
-                  width: 44,
-                  height: 26,
-                  borderRadius: 13,
-                  background: settings.presentationBroadcastEnabled
-                    ? "var(--color-primary)"
-                    : "var(--color-border)",
-                  position: "relative",
-                  transition: "background 0.2s",
-                }}
-              >
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: "#fff",
-                    position: "absolute",
-                    top: 3,
-                    left: settings.presentationBroadcastEnabled ? 21 : 3,
                     transition: "left 0.2s",
                   }}
                 />

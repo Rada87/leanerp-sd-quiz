@@ -10,10 +10,9 @@ const KEY = "leanerp-quiz-settings";
 
 interface Settings {
   soundEnabled: boolean;
-  presentationBroadcastEnabled: boolean;
 }
 
-const defaults: Settings = { soundEnabled: true, presentationBroadcastEnabled: true };
+const defaults: Settings = { soundEnabled: true };
 
 function load(): Settings {
   try {
@@ -32,13 +31,11 @@ function save(s: Settings) {
 interface Ctx {
   settings: Settings;
   setSoundEnabled: (v: boolean) => void;
-  setPresentationBroadcastEnabled: (v: boolean) => void;
 }
 
 const SettingsContext = createContext<Ctx>({
   settings: defaults,
   setSoundEnabled: () => {},
-  setPresentationBroadcastEnabled: () => {},
 });
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -52,16 +49,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setPresentationBroadcastEnabled = useCallback((v: boolean) => {
-    setSettings((prev) => {
-      const next = { ...prev, presentationBroadcastEnabled: v };
-      save(next);
-      return next;
-    });
-  }, []);
-
   return (
-    <SettingsContext.Provider value={{ settings, setSoundEnabled, setPresentationBroadcastEnabled }}>
+    <SettingsContext.Provider value={{ settings, setSoundEnabled }}>
       {children}
     </SettingsContext.Provider>
   );

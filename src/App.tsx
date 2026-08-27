@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuizState } from "./hooks/useQuizState";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
-import { SettingsProvider, useSettings } from "./hooks/useSettings";
+import { SettingsProvider } from "./hooks/useSettings";
 import { KIOSK_IDLE_TIMEOUT_MS, QUESTION_TIME_SECONDS } from "./constants";
 import { BackgroundPattern } from "./components/BackgroundPattern";
 import { StartScreen } from "./components/StartScreen";
@@ -35,7 +35,6 @@ function GearIcon() {
 
 function AppContent() {
   const quiz = useQuizState();
-  const { settings } = useSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
 
@@ -72,7 +71,6 @@ function AppContent() {
   }, [quiz.screen]);
 
   useEffect(() => {
-    if (!settings.presentationBroadcastEnabled) return;
     if (quiz.screen !== "quiz" || !quiz.currentQuestion) return;
     syncPresentation({
       type: "question",
@@ -91,7 +89,6 @@ function AppContent() {
       score: quiz.score,
     });
   }, [
-    settings.presentationBroadcastEnabled,
     quiz.screen,
     quiz.currentQuestion,
     quiz.playerName,
@@ -120,7 +117,7 @@ function AppContent() {
   const handleContinue = useCallback(() => {
     const isLast = quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
     if (isLast && quiz.isAnswered) {
-      quiz.saveAndShowResult(settings.presentationBroadcastEnabled);
+      quiz.saveAndShowResult(true);
     } else {
       quiz.continueToNext();
     }
@@ -130,12 +127,11 @@ function AppContent() {
     quiz.isAnswered,
     quiz.saveAndShowResult,
     quiz.continueToNext,
-    settings.presentationBroadcastEnabled,
   ]);
 
   const handleFinish = useCallback(() => {
-    quiz.finishQuiz(settings.presentationBroadcastEnabled);
-  }, [quiz.finishQuiz, settings.presentationBroadcastEnabled]);
+    quiz.finishQuiz(true);
+  }, [quiz.finishQuiz]);
 
   return (
     <div
