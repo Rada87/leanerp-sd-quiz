@@ -12,7 +12,7 @@ export interface Question {
   explanation: string;
 }
 
-export type AppScreen = "start" | "quiz" | "result" | "leaderboard" | "editor";
+export type AppScreen = "start" | "quiz" | "result" | "leaderboard" | "editor" | "activity";
 
 export interface QuestionStorage {
   getQuestions(): Promise<Question[]>;

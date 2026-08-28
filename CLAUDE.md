@@ -61,6 +61,8 @@ Když je server nedostupný, kvíz hráče **pustí hrát i bez fronty** (`App.t
 
 **Ladění:** konzole obou stran loguje pod prefixy `[quiz-mirror]`, `[quiz-sync]` a `[quiz-queue]`, včetně stavového řádku po 30 s (odhalí stream, který je `OPEN`, ale mlčí).
 
+**Activity logging:** `POST /api/activity` ukládá do SQLite pouze whitelistované anonymní události. Nikdy do něj neposílat zadané jméno hráče, text otázky/odpovědi ani queue `clientId`. Korelace používá paměťové `sessionId`, `quizRunId` a náhodný alias `Player_XXXXXX`; odpověď ukládá pouze option ID a písmeno A/B/C/D. `EVENT_START_AT`/`EVENT_END_AT` určují before/during/after fáze reportu a `ACTIVITY_RETENTION_DAYS` výchozí 180denní retenci. Souhrn je `/api/activity/summary`, anonymní timeline `/api/activity/export`.
+
 **Verze je na třech místech** a synchronizuje se ručně: `src/constants.ts` (`APP_VERSION`), `package.json` a `index.html` prezentace (`.settings-version`). Prezentace nemá build, takže ji z `package.json` vytáhnout nelze.
 
 **Konstanty skórování jsou zduplikované** v `src/constants.ts` a v `script.js` prezentace (`MAX_POINTS_PER_QUESTION`, `SCORING_EXPONENT`, …), aby zrcadlený výpočet bodů seděl. Při změně upravit obojí.

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getClientId } from "../utils/clientId";
+import { logActivity } from "../utils/activity";
 
 const apiBase = `${import.meta.env.BASE_URL}api`;
 const HEARTBEAT_MS = 15000; // comfortably under the server's 60 s timeouts
@@ -30,6 +31,7 @@ const emptySnapshot: QueueSnapshot = {
 };
 
 const LOG = "[quiz-queue]";
+let lastStreamErrorLogAt = 0;
 
 async function post(path: string, body: Record<string, unknown>): Promise<QueueSnapshot | null> {
   try {
@@ -40,6 +42,9 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
     });
     if (!res.ok) {
       console.warn(`${LOG} POST ${path} rejected with ${res.status} — queue gate inactive.`);
+      if (path !== "/queue/heartbeat") {
+        logActivity("queue_request_failed", { operation: path, status: res.status });
+      }
       return null;
     }
     const snapshot = (await res.json()) as QueueSnapshot;
@@ -49,6 +54,12 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
     return snapshot;
   } catch (error) {
     console.warn(`${LOG} POST ${path} failed — queue gate inactive, letting play continue.`, error);
+    if (path !== "/queue/heartbeat") {
+      logActivity("queue_request_failed", {
+        operation: path,
+        message: error instanceof Error ? error.message : "Queue request failed",
+      });
+    }
     return null;
   }
 }
@@ -59,11 +70,13 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
  * a queue outage must never lock players out of the quiz.
  */
 export function useQueue() {
-  const clientId = useRef(getClientId()).current;
+  const clientId = getClientId();
   const [snapshot, setSnapshot] = useState<QueueSnapshot>(emptySnapshot);
   const stateRef = useRef<QueueState>("idle");
 
-  stateRef.current = snapshot.state;
+  useEffect(() => {
+    stateRef.current = snapshot.state;
+  }, [snapshot.state]);
 
   const apply = useCallback((next: QueueSnapshot | null) => {
     if (next) setSnapshot(next);
@@ -91,10 +104,19 @@ export function useQueue() {
   useEffect(() => {
     const source = new EventSource(`${apiBase}/events`);
     source.onopen = () => console.log(`${LOG} queue stream OPEN.`);
-    source.onerror = () =>
+    source.onerror = () => {
       console.warn(
         `${LOG} queue stream error (readyState=${source.readyState}) — live position updates may stall.`
       );
+      if (Date.now() - lastStreamErrorLogAt > 60000) {
+        lastStreamErrorLogAt = Date.now();
+        logActivity("queue_request_failed", {
+          operation: "/queue/events",
+          status: source.readyState,
+          message: "Queue event stream error",
+        });
+      }
+    };
     const onQueueState = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);

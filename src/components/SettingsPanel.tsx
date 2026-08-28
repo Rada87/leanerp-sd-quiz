@@ -11,9 +11,10 @@ interface SettingsPanelProps {
   onLeaderboard: () => void;
   onHome: () => void;
   onEditor: () => void;
+  onActivity: () => void;
 }
 
-export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor, onActivity }: SettingsPanelProps) {
   const { settings, setSoundEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
@@ -148,12 +149,23 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                   marginBottom: 12,
                 }}
               >
-                Leaderboard
+                Admin & data
               </div>
 
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 8 }}
               >
+                <button
+                  className="btn-secondary"
+                  onClick={() => { onActivity(); onClose(); }}
+                  style={{
+                    padding: "10px 16px",
+                    minHeight: "auto",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  Activity Report
+                </button>
                 <button
                   className="btn-secondary"
                   onClick={() => { onEditor(); onClose(); }}

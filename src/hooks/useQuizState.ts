@@ -37,6 +37,7 @@ type QuizAction =
   | { type: "GO_TO_LEADERBOARD" }
   | { type: "GO_TO_START" }
   | { type: "GO_TO_EDITOR" }
+  | { type: "GO_TO_ACTIVITY" }
   | { type: "PLAY_AGAIN" };
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -141,6 +142,8 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return { ...state, screen: "start" };
     case "GO_TO_EDITOR":
       return { ...state, screen: "editor" };
+    case "GO_TO_ACTIVITY":
+      return { ...state, screen: "activity" };
     case "PLAY_AGAIN":
       return { ...initialState, screen: "start" };
     default:
@@ -151,7 +154,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
 export function useQuizState() {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const scoreSavedRef = useRef(false);
-  const clientId = useRef(getClientId()).current;
+  const clientId = getClientId();
 
   const maxScore = state.questions.length * MAX_POINTS_PER_QUESTION;
   const percentage =
@@ -242,6 +245,10 @@ export function useQuizState() {
     dispatch({ type: "GO_TO_EDITOR" });
   }, []);
 
+  const goToActivity = useCallback(() => {
+    dispatch({ type: "GO_TO_ACTIVITY" });
+  }, []);
+
   const playAgain = useCallback(() => {
     dispatch({ type: "PLAY_AGAIN" });
   }, []);
@@ -271,6 +278,7 @@ export function useQuizState() {
     goToLeaderboard,
     goToStart,
     goToEditor,
+    goToActivity,
     playAgain,
   };
 }

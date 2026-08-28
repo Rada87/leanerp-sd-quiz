@@ -12,10 +12,13 @@ import { Leaderboard } from "./components/Leaderboard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { QuestionsEditor } from "./components/QuestionsEditor";
 import { WaitingScreen } from "./components/WaitingScreen";
+import { ActivityReport } from "./components/ActivityReport";
 import { useQueue } from "./hooks/useQueue";
+import { useActivityTracking } from "./hooks/useActivityTracking";
 import { getClientId } from "./utils/clientId";
-import { questionStorage } from "./storage/QuestionStorage";
+import { questionSource, questionStorage } from "./storage/QuestionStorage";
 import { syncPresentation } from "./utils/presentationSync";
+import { beginQuizActivity, logActivity } from "./utils/activity";
 import type { Question } from "./types";
 
 function GearIcon() {
@@ -42,12 +45,43 @@ function AppContent() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
   const [pendingName, setPendingName] = useState("");
-  const clientId = useRef(getClientId()).current;
+  const clientId = getClientId();
+  const lastQueueStateKey = useRef("");
   const isQueued = queue.snapshot.state === "waiting" || queue.snapshot.state === "ready";
 
+  useActivityTracking({
+    screen: quiz.screen,
+    currentQuestion: quiz.currentQuestion,
+    currentQuestionIndex: quiz.currentQuestionIndex,
+    totalQuestions: quiz.totalQuestions,
+    score: quiz.score,
+    maxScore: quiz.maxScore,
+    percentage: quiz.percentage,
+    correctAnswers: quiz.correctAnswers,
+    answerHistory: quiz.answerHistory,
+  });
+
   useEffect(() => {
-    questionStorage.getQuestions().then(setLoadedQuestions).catch(() => {});
+    questionStorage.getQuestions().then((questions) => {
+      setLoadedQuestions(questions);
+      logActivity("questions_loaded", { source: questionSource, count: questions.length });
+    }).catch((error) => {
+      logActivity("questions_load_failed", {
+        message: error instanceof Error ? error.message : "Questions could not be loaded",
+      });
+    });
   }, []);
+
+  useEffect(() => {
+    const key = `${queue.snapshot.state}:${queue.snapshot.position}:${queue.snapshot.waitingCount}`;
+    if (lastQueueStateKey.current === key) return;
+    lastQueueStateKey.current = key;
+    logActivity("queue_state_changed", {
+      state: queue.snapshot.state,
+      position: queue.snapshot.position,
+      waitingCount: queue.snapshot.waitingCount,
+    });
+  }, [queue.snapshot.state, queue.snapshot.position, queue.snapshot.waitingCount]);
 
   useEffect(() => {
     if (window.location.hash === "#leaderboard") {
@@ -119,18 +153,26 @@ function AppContent() {
   }, [quiz.screen, queue.snapshot.state, queue.leave]);
 
   const handleIdleReset = useCallback(() => {
+    logActivity("idle_reset", { screen: quiz.screen });
     quiz.goToStart();
-  }, [quiz.goToStart]);
+  }, [quiz.goToStart, quiz.screen]);
 
   useIdleTimeout(
     KIOSK_IDLE_TIMEOUT_MS,
     handleIdleReset,
-    quiz.screen === "result" || quiz.screen === "leaderboard"
+    quiz.screen === "result" || quiz.screen === "leaderboard" || quiz.screen === "activity"
   );
 
   // Ask the server for the play slot first. If the queue is unreachable we
   // start anyway — a queue outage must never stop people from playing.
-  const handleStart = useCallback(async (name: string) => {
+  const beginQuiz = useCallback((name: string, queueMode: string) => {
+    beginQuizActivity();
+    logActivity("quiz_started", { questionCount: loadedQuestions.length, queueMode });
+    quiz.startQuiz(name, loadedQuestions);
+  }, [quiz.startQuiz, loadedQuestions]);
+
+  const handleStart = useCallback(async (name: string, hasName: boolean) => {
+    logActivity("quiz_start_requested", { hasName });
     setPendingName(name);
     const result = await queue.join(name);
     if (!result) {
@@ -139,20 +181,21 @@ function AppContent() {
       );
     }
     if (!result || result.state === "active") {
-      quiz.startQuiz(name, loadedQuestions);
+      beginQuiz(name, result ? "direct" : "fail_open");
     }
-  }, [queue.join, quiz.startQuiz, loadedQuestions]);
+  }, [queue.join, beginQuiz]);
 
   const handleClaimTurn = useCallback(async () => {
     const result = await queue.claim();
     if (!result || result.state === "active") {
-      quiz.startQuiz(pendingName, loadedQuestions);
+      beginQuiz(pendingName, result ? "claimed" : "fail_open_claim");
     }
-  }, [queue.claim, quiz.startQuiz, pendingName, loadedQuestions]);
+  }, [queue.claim, beginQuiz, pendingName]);
 
   const handleLeaveQueue = useCallback(() => {
+    logActivity("queue_left", { previousState: queue.snapshot.state });
     queue.leave();
-  }, [queue.leave]);
+  }, [queue.leave, queue.snapshot.state]);
 
   const handleContinue = useCallback(() => {
     const isLast = quiz.currentQuestionIndex >= quiz.totalQuestions - 1;
@@ -181,7 +224,10 @@ function AppContent() {
       <BackgroundPattern />
 
       <button
-        onClick={() => setSettingsOpen((v) => !v)}
+        onClick={() => setSettingsOpen((isOpen) => {
+          if (!isOpen) logActivity("settings_opened", { screen: quiz.screen });
+          return !isOpen;
+        })}
         aria-label="Settings"
         style={{
           position: "fixed",
@@ -217,6 +263,7 @@ function AppContent() {
         onLeaderboard={quiz.goToLeaderboard}
         onHome={quiz.goToStart}
         onEditor={quiz.goToEditor}
+        onActivity={quiz.goToActivity}
       />
 
       <AnimatePresence mode="wait">
@@ -318,6 +365,18 @@ function AppContent() {
             transition={{ duration: 0.3 }}
           >
             <QuestionsEditor onBack={quiz.goToStart} />
+          </motion.div>
+        )}
+
+        {quiz.screen === "activity" && (
+          <motion.div
+            key="activity"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ActivityReport onBack={quiz.goToStart} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -31,7 +31,45 @@ db.exec(`
     correct_option_id TEXT NOT NULL,
     explanation TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS activity_events (
+    id TEXT PRIMARY KEY,
+    event_name TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    quiz_run_id TEXT,
+    player_alias TEXT,
+    app_version TEXT NOT NULL,
+    screen TEXT,
+    occurred_at TEXT NOT NULL,
+    received_at TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'client',
+    metadata_json TEXT NOT NULL DEFAULT '{}'
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_activity_received_at
+    ON activity_events(received_at);
+  CREATE INDEX IF NOT EXISTS idx_activity_event_name
+    ON activity_events(event_name);
+  CREATE INDEX IF NOT EXISTS idx_activity_session
+    ON activity_events(session_id);
+  CREATE INDEX IF NOT EXISTS idx_activity_quiz_run
+    ON activity_events(quiz_run_id);
 `);
+
+// Existing installations may already have the first activity schema. SQLite
+// cannot add a column through CREATE TABLE IF NOT EXISTS, so migrate it once.
+const activityColumns = db.prepare("PRAGMA table_info(activity_events)").all();
+if (!activityColumns.some((column) => column.name === "player_alias")) {
+  db.exec("ALTER TABLE activity_events ADD COLUMN player_alias TEXT");
+}
+
+const retentionDays = Math.min(
+  Math.max(Number.parseInt(process.env.ACTIVITY_RETENTION_DAYS || "180", 10) || 180, 1),
+  3650
+);
+db.prepare(
+  "DELETE FROM activity_events WHERE received_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', ?)"
+).run(`-${retentionDays} days`);
 
 function seedQuestionsIfEmpty() {
   const { count } = db.prepare("SELECT COUNT(*) AS count FROM questions").get();

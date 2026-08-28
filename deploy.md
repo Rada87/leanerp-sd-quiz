@@ -29,6 +29,20 @@ curl -fsS https://srv1848295.hstgr.cloud/apps/leanerp-sd-quiz/api/leaderboard
 
 Očekávaný stav je HTTP `200`. SQLite databáze je trvale uložena v `/srv/www/leanerp-sd-quiz/data/quiz.sqlite`; aktualizace kódu ji nikdy nepřepisuje.
 
+## Activity Report pro event
+
+Do `/srv/www/leanerp-sd-quiz/.env` lze před eventem přidat:
+
+```dotenv
+EVENT_START_AT=2026-09-15T08:00:00+02:00
+EVENT_END_AT=2026-09-15T18:00:00+02:00
+ACTIVITY_RETENTION_DAYS=180
+```
+
+Po změně `.env` je nutné znovu vytvořit kontejner přes `docker compose up -d`. Activity Report v Settings pak automaticky rozdělí data na before/during/after. Detailní anonymní export je na `/api/activity/export`; souhrn na `/api/activity/summary`.
+
+Telemetrie neobsahuje IP adresy, zadaná jména hráčů, texty otázek ani texty odpovědí. Každá hra má náhodný alias `Player_XXXXXX`; zvolená možnost se ukládá jako option ID a písmeno A/B/C/D. Queue `clientId` se nikdy nezapisuje do SQLite.
+
 ## API kontrakt pro prezentaci
 
 `GET /apps/leanerp-sd-quiz/api/leaderboard` vrací nejvýše deset záznamů v tomto tvaru:

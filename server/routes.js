@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "./db.js";
 import { broadcast, getLatest } from "./events.js";
 import * as queue from "./queue.js";
+import { activitySummary, exportActivity, recordActivity } from "./activity.js";
 
 const LEADERBOARD_TOP_N = 10;
 
@@ -41,6 +42,34 @@ function questionFromRow(row) {
 }
 
 export const router = Router();
+
+// --- Privacy-first activity logging ---
+
+router.post("/activity", (req, res) => {
+  try {
+    recordActivity(req.body);
+    res.status(204).end();
+  } catch (error) {
+    if (error?.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
+      // Delivery may be retried by the browser; event ids make it idempotent.
+      return res.status(204).end();
+    }
+    if (error?.code === "ACTIVITY_RATE_LIMIT") {
+      return res.status(429).json({ error: "activity rate limit exceeded" });
+    }
+    res.status(400).json({ error: error instanceof Error ? error.message : "invalid activity" });
+  }
+});
+
+router.get("/activity/summary", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(activitySummary(req.query));
+});
+
+router.get("/activity/export", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(exportActivity(req.query));
+});
 
 // --- Scores ---
 

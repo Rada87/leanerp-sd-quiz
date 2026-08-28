@@ -2,14 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 interface StartScreenProps {
-  onStart: (playerName: string) => void;
+  onStart: (playerName: string, hasName: boolean) => void;
 }
 
 export function StartScreen({ onStart }: StartScreenProps) {
   const [name, setName] = useState("");
 
   const handleStart = () => {
-    onStart(name.trim() || "Guest");
+    const trimmedName = name.trim();
+    onStart(trimmedName || "Guest", trimmedName.length > 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

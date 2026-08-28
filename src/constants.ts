@@ -9,4 +9,4 @@ export const QUIZ_QUESTION_COUNT = 5;
 export const STORAGE_KEY = "leanerp-quiz-scores";
 // Shown in the settings panel. Keep in step with package.json and with the
 // presentation's own version label.
-export const APP_VERSION = "1.6.1";
+export const APP_VERSION = "1.7.0";

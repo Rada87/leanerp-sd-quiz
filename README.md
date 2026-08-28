@@ -21,6 +21,34 @@ Kvízová aplikace pro Škoda / LeanERP Service Desk. React 19 + TypeScript + Vi
 - Frontend mluví s backendem přes relativní `/api/...` fetch, žádné externí služby ani API klíče nejsou potřeba.
 - Otázky se při prvním startu naseedují z `dist/questions.json` (bývalá statická sada), pokud je tabulka `questions` prázdná.
 
+## Activity logging
+
+Aplikace ukládá do SQLite anonymní provozní události pro ladění a vyhodnocení eventu. Nezapisuje IP adresy, zadaná jména hráčů, texty otázek ani texty odpovědí. Jedno načtení stránky má náhodné `sessionId`; každá hra má náhodné `quizRunId` a alias `Player_XXXXXX`. U odpovědi se ukládá ID možnosti a písmeno A/B/C/D, aby šlo analyzovat distraktory. Queue `clientId` se nepersistuje.
+
+Activity Report je dostupný přes Settings → Activity Report. Obsahuje návštěvy, starty a dokončení kvízu, completion rate, průměrné skóre a délku, čekání ve frontě, úspěšnost otázek a technické chyby. Odtud lze stáhnout anonymní JSON timeline.
+
+Volitelné proměnné prostředí:
+
+- `EVENT_START_AT` a `EVENT_END_AT` — ISO-8601 hranice pro rozdělení metrik na before/during/after.
+- `ACTIVITY_RETENTION_DAYS` — retence událostí; výchozí hodnota je 180 dní, aplikovaná při startu serveru.
+
+API:
+
+- `POST /api/activity` — validovaný, rate-limitovaný a na klientu fail-open ingest známých typů událostí.
+- `GET /api/activity/summary` — anonymní agregovaný report; podporuje `from` a `to` v ISO-8601.
+- `GET /api/activity/export` — anonymní timeline; podporuje `from`, `to` a `limit` (maximum 50 000).
+
+### Datový slovník
+
+| Oblast | Události | Ukládaná metadata |
+|---|---|---|
+| Návštěva | `app_opened`, `screen_viewed`, `connectivity_changed` | stav online, viditelnost, předchozí obrazovka |
+| Fronta | `queue_state_changed`, `queue_left`, `queue_request_failed` | stav, pozice, počet čekajících, operace/status chyby |
+| Kvíz | `quiz_start_requested`, `quiz_started`, `quiz_completed`, `quiz_abandoned` | zda bylo zadáno jméno (pouze boolean), počet otázek, queue režim, agregované skóre, délka, důvod opuštění |
+| Otázky | `question_viewed`, `question_answered`, `question_timed_out` | ID/kategorie otázky, index, správnost, body, čas a ID/písmeno zvolené možnosti; nikdy text možnosti |
+| Diagnostika | `client_error`, `presentation_sync_failed`, `score_storage_fallback`, `questions_load_failed` | typ/operace, HTTP status a omezená chybová zpráva |
+| Admin | `settings_opened`, `leaderboard_viewed`, `activity_report_viewed`, `activity_exported`, `idle_reset` | obrazovka nebo počet exportovaných řádků |
+
 ## Lokální běh v Dockeru
 
 ```bash

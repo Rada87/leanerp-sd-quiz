@@ -1,5 +1,6 @@
 import type { ScoreRecord } from "../types";
 import type { SaveScoreResult, ScoreStorage } from "./ScoreStorage";
+import { logActivity } from "../utils/activity";
 
 export class FallbackScoreStorage implements ScoreStorage {
   private primary: ScoreStorage;
@@ -13,7 +14,11 @@ export class FallbackScoreStorage implements ScoreStorage {
   async saveScore(record: ScoreRecord, options?: { broadcast?: boolean }): Promise<SaveScoreResult> {
     try {
       return await this.primary.saveScore(record, options);
-    } catch {
+    } catch (error) {
+      logActivity("score_storage_fallback", {
+        operation: "saveScore",
+        message: error instanceof Error ? error.message : "Primary score storage failed",
+      });
       return await this.fallback.saveScore(record, options);
     }
   }
