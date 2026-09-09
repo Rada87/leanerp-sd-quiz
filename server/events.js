@@ -17,6 +17,13 @@ const PAD = " ".repeat(2048);
 let seq = Date.now() * 1000;
 const latest = { seq, progress: null, completed: null, queue: null };
 
+// A player who closes the tab mid-quiz sends no "completed" event, so the
+// last quiz_progress entry would otherwise linger forever and a freshly
+// loaded presentation would replay it as a live question. Drop progress from
+// the polled snapshot once it has gone quiet for longer than a question.
+const PROGRESS_STALE_MS = 45000;
+let progressAt = 0;
+
 setInterval(() => {
   for (const res of clients) res.write(`:${PAD}\n\n`);
 }, PING_INTERVAL_MS).unref();
@@ -32,9 +39,14 @@ export function removeClient(res) {
 export function broadcast(type, data) {
   seq += 1;
   const entry = { seq, data };
-  if (type === "quiz_progress") latest.progress = entry;
-  else if (type === "quiz_completed") latest.completed = entry;
-  else if (type === "queue_state") latest.queue = entry;
+  if (type === "quiz_progress") {
+    latest.progress = entry;
+    progressAt = Date.now();
+  } else if (type === "quiz_completed") {
+    latest.completed = entry;
+    // The run is over; its last question must not resurface on a reload.
+    latest.progress = null;
+  } else if (type === "queue_state") latest.queue = entry;
   latest.seq = seq;
 
   // The trailing comment pads every event past the buffer a proxy may be
@@ -48,5 +60,8 @@ export function broadcast(type, data) {
 }
 
 export function getLatest() {
+  if (latest.progress && Date.now() - progressAt > PROGRESS_STALE_MS) {
+    latest.progress = null;
+  }
   return latest;
 }
