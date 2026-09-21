@@ -117,21 +117,15 @@ export function FarewellScreen() {
       >
         <WavingRobot />
 
-        <div
+        <h2
           style={{
-            marginTop: 8,
-            fontSize: "0.75rem",
-            fontWeight: 600,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--color-primary)",
+            fontSize: "clamp(2rem, 6vw, 2.9rem)",
+            fontWeight: 800,
+            lineHeight: 1.15,
+            margin: "18px 0 18px",
           }}
         >
-          That&rsquo;s a wrap
-        </div>
-
-        <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "12px 0 16px" }}>
-          Thanks for playing!
+          Thanks for your visit!
         </h2>
 
         <p
@@ -144,19 +138,7 @@ export function FarewellScreen() {
           }}
         >
           Your quiz session has ended. The <strong style={{ color: "var(--color-text)" }}>LEAN ERP team</strong>{" "}
-          thanks you for visiting our stand — we hope you had fun and took away
-          something useful about SAP&nbsp;S/4HANA for CKD plants.
-        </p>
-
-        <p
-          style={{
-            marginTop: 20,
-            fontSize: "0.9rem",
-            lineHeight: 1.6,
-            color: "var(--color-text-muted)",
-          }}
-        >
-          Want another round? Come and see us at the stand.
+          thanks you for visiting our stand.
         </p>
 
         <div
@@ -164,14 +146,39 @@ export function FarewellScreen() {
             marginTop: 28,
             paddingTop: 18,
             borderTop: "1px solid var(--color-border)",
-            fontSize: "0.72rem",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--color-text-muted)",
-            opacity: 0.7,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            alignItems: "center",
           }}
         >
-          LEAN ERP &middot; Škoda GCC
+          <div
+            style={{
+              fontSize: "0.72rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--color-text-muted)",
+              opacity: 0.7,
+            }}
+          >
+            LEAN ERP &middot; Škoda GCC
+          </div>
+          <a
+            href="https://gcc.skoda-auto.com/lean-erp"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              color: "var(--color-primary)",
+              textDecoration: "none",
+              borderBottom: "1px solid var(--color-primary)",
+              paddingBottom: 1,
+              wordBreak: "break-word",
+            }}
+          >
+            gcc.skoda-auto.com/lean-erp
+          </a>
         </div>
       </motion.div>
     </div>
