@@ -2,15 +2,15 @@
   <!-- dark background tile -->
   <rect width="64" height="64" rx="12" fill="#050505"/>
   <!-- antenna -->
-  <rect x="29" y="3" width="6" height="10" rx="3" fill="#78faae"/>
+  <rect x="29" y="3" width="6" height="10" rx="3" fill="#74D7CB"/>
   <!-- head -->
-  <rect x="12" y="15" width="40" height="27" rx="10" fill="#0e0e0e" stroke="#78faae" stroke-width="2"/>
+  <rect x="12" y="15" width="40" height="27" rx="10" fill="#0e0e0e" stroke="#74D7CB" stroke-width="2"/>
   <!-- eyes glow -->
-  <circle cx="22" cy="28" r="7" fill="#78faae" opacity="0.2"/>
-  <circle cx="42" cy="28" r="7" fill="#78faae" opacity="0.2"/>
+  <circle cx="22" cy="28" r="7" fill="#74D7CB" opacity="0.2"/>
+  <circle cx="42" cy="28" r="7" fill="#74D7CB" opacity="0.2"/>
   <!-- eyes -->
-  <circle cx="22" cy="28" r="5" fill="#78faae"/>
-  <circle cx="42" cy="28" r="5" fill="#78faae"/>
+  <circle cx="22" cy="28" r="5" fill="#74D7CB"/>
+  <circle cx="42" cy="28" r="5" fill="#74D7CB"/>
   <!-- body -->
   <rect x="18" y="44" width="28" height="17" rx="6" fill="#0e0e0e" stroke="#1a4d33" stroke-width="2"/>
 </svg>

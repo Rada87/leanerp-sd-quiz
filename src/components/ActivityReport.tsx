@@ -190,7 +190,7 @@ export function ActivityReport({ onBack }: ActivityReportProps) {
 
         {summary && (
           <>
-            <div style={{ marginTop: 24, padding: "14px 16px", borderRadius: "var(--radius-sm)", background: "rgba(120, 250, 174, 0.06)", border: "1px solid rgba(120, 250, 174, 0.15)", fontSize: "0.82rem", lineHeight: 1.6 }}>
+            <div style={{ marginTop: 24, padding: "14px 16px", borderRadius: "var(--radius-sm)", background: "rgba(116, 215, 203, 0.06)", border: "1px solid rgba(116, 215, 203, 0.15)", fontSize: "0.82rem", lineHeight: 1.6 }}>
               Event window: <strong>{formatDate(summary.eventWindow.startAt)}</strong> → <strong>{formatDate(summary.eventWindow.endAt)}</strong>
               {!summary.eventWindow.startAt && (
                 <span style={{ color: "var(--color-text-muted)" }}> · Set EVENT_START_AT and EVENT_END_AT on the server for before/during/after phases.</span>

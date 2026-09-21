@@ -17,9 +17,9 @@
   --color-bg: #050505;
   --color-bg-card: #0e0e0e;
   --color-bg-card-hover: #181818;
-  --color-primary: #78faae;
+  --color-primary: #74D7CB;
   --color-primary-dark: #1a4d33;
-  --color-primary-glow: rgba(120, 250, 174, 0.15);
+  --color-primary-glow: rgba(116, 215, 203, 0.15);
   --color-error: #ff4d6a;
   --color-error-glow: rgba(255, 77, 106, 0.15);
   --color-text: #ffffff;
@@ -76,7 +76,7 @@
 
 @media (hover: hover) {
   .btn-secondary:hover {
-    background: rgba(120, 250, 174, 0.06);
+    background: rgba(116, 215, 203, 0.06);
     border-color: var(--color-primary);
   }
 }

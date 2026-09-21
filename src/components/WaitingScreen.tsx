@@ -111,8 +111,8 @@ export function WaitingScreen({ snapshot, clientId, onStart, onLeave }: WaitingS
                 whileTap={{ scale: 0.97 }}
                 animate={{
                   boxShadow: [
-                    "0 0 0 0 rgba(120, 250, 174, 0.4)",
-                    "0 0 0 18px rgba(120, 250, 174, 0)",
+                    "0 0 0 0 rgba(116, 215, 203, 0.4)",
+                    "0 0 0 18px rgba(116, 215, 203, 0)",
                   ],
                 }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
