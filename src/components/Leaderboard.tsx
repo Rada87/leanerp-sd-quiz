@@ -35,7 +35,7 @@ function SwipeableRow({ record, index, canDelete, onDelete }: RowProps) {
         position: "relative",
         overflow: "hidden",
         borderRadius: "var(--radius-sm)",
-        border: `1px solid ${isFirst ? "rgba(109, 255, 163, 0.15)" : "var(--color-border)"}`,
+        border: `1px solid ${isFirst ? "rgba(120, 250, 174, 0.15)" : "var(--color-border)"}`,
         background: "#c0392b",
       }}
     >
@@ -82,9 +82,9 @@ function SwipeableRow({ record, index, canDelete, onDelete }: RowProps) {
               index === 0
                 ? "var(--color-primary)"
                 : index === 1
-                  ? "rgba(109, 255, 163, 0.3)"
+                  ? "rgba(120, 250, 174, 0.3)"
                   : index === 2
-                    ? "rgba(109, 255, 163, 0.15)"
+                    ? "rgba(120, 250, 174, 0.15)"
                     : "var(--color-border)",
             color: index < 1 ? "var(--color-bg)" : "var(--color-text)",
           }}

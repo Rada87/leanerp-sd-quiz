@@ -206,7 +206,7 @@ export function QuestionsEditor({ onBack }: Props) {
                 padding: "10px 14px",
                 borderRadius: 8,
                 fontSize: "0.85rem",
-                background: status.ok ? "rgba(109,255,163,0.1)" : "rgba(255,77,106,0.1)",
+                background: status.ok ? "rgba(120, 250, 174,0.1)" : "rgba(255,77,106,0.1)",
                 color: status.ok ? "var(--color-primary)" : "var(--color-error)",
                 border: `1px solid ${status.ok ? "var(--color-primary-dark)" : "rgba(255,77,106,0.3)"}`,
               }}

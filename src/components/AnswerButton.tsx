@@ -21,7 +21,7 @@ const stateStyles: Record<AnswerState, React.CSSProperties> = {
     color: "var(--color-text)",
   },
   "selected-correct": {
-    background: "rgba(109, 255, 163, 0.12)",
+    background: "rgba(120, 250, 174, 0.12)",
     border: "2px solid var(--color-primary)",
     color: "var(--color-primary)",
   },
@@ -31,8 +31,8 @@ const stateStyles: Record<AnswerState, React.CSSProperties> = {
     color: "var(--color-error)",
   },
   "revealed-correct": {
-    background: "rgba(109, 255, 163, 0.06)",
-    border: "2px solid rgba(109, 255, 163, 0.4)",
+    background: "rgba(120, 250, 174, 0.06)",
+    border: "2px solid rgba(120, 250, 174, 0.4)",
     color: "var(--color-primary)",
   },
   disabled: {

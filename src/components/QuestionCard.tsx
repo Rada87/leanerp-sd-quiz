@@ -107,11 +107,11 @@ export function QuestionCard({
                 padding: "16px 20px",
                 borderRadius: "var(--radius-sm)",
                 background: isCorrect
-                  ? "rgba(109, 255, 163, 0.08)"
+                  ? "rgba(120, 250, 174, 0.08)"
                   : "rgba(255, 77, 106, 0.08)",
                 border: `1px solid ${
                   isCorrect
-                    ? "rgba(109, 255, 163, 0.2)"
+                    ? "rgba(120, 250, 174, 0.2)"
                     : "rgba(255, 77, 106, 0.2)"
                 }`,
               }}

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 const COLORS = [
-  "#6DFFA3",
+  "#78faae",
   "#3FE584",
   "#FFD700",
   "#FFC107",
