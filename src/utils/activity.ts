@@ -6,6 +6,8 @@ export type ActivityEventName =
   | "connectivity_changed"
   | "screen_viewed"
   | "settings_opened"
+  | "admin_unlock_attempt"
+  | "admin_locked"
   | "questions_loaded"
   | "questions_load_failed"
   | "queue_state_changed"

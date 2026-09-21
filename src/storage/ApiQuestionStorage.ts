@@ -1,12 +1,17 @@
 import type { Question, QuestionStorage } from "../types";
+import { AdminAuthError, adminHeaders, handleAdminRejection } from "../utils/adminAuth";
 
 const apiBase = `${import.meta.env.BASE_URL}api`;
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(`${apiBase}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: { "Content-Type": "application/json", ...adminHeaders(), ...init?.headers },
   });
+  if (res.status === 401) {
+    handleAdminRejection();
+    throw new AdminAuthError();
+  }
   if (!res.ok) throw new Error(`API request failed: ${res.status} ${path}`);
   return res;
 }

@@ -16,6 +16,7 @@ import { ActivityReport } from "./components/ActivityReport";
 import { useQueue } from "./hooks/useQueue";
 import { useActivityTracking } from "./hooks/useActivityTracking";
 import { getClientId } from "./utils/clientId";
+import { useAdminUnlocked } from "./utils/adminAuth";
 import { questionSource, questionStorage } from "./storage/QuestionStorage";
 import { syncPresentation } from "./utils/presentationSync";
 import { beginQuizActivity, logActivity } from "./utils/activity";
@@ -46,6 +47,7 @@ function AppContent() {
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
   const [pendingName, setPendingName] = useState("");
   const clientId = getClientId();
+  const adminUnlocked = useAdminUnlocked();
   const lastQueueStateKey = useRef("");
   const isQueued = queue.snapshot.state === "waiting" || queue.snapshot.state === "ready";
 
@@ -82,6 +84,14 @@ function AppContent() {
       waitingCount: queue.snapshot.waitingCount,
     });
   }, [queue.snapshot.state, queue.snapshot.position, queue.snapshot.waitingCount]);
+
+  // Admin-only screens must not stay on a tablet once the session is locked
+  // or rejected by the server.
+  useEffect(() => {
+    if (!adminUnlocked && (quiz.screen === "editor" || quiz.screen === "activity")) {
+      quiz.goToStart();
+    }
+  }, [adminUnlocked, quiz.screen, quiz.goToStart]);
 
   useEffect(() => {
     if (window.location.hash === "#leaderboard") {

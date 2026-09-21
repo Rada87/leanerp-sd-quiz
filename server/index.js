@@ -9,6 +9,9 @@ const DIST_DIR = path.join(__dirname, "..", "dist");
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+// Nginx passes X-Forwarded-For, so admin login throttling counts real
+// clients instead of locking everyone out through one proxy address.
+app.set("trust proxy", true);
 app.use(express.json());
 
 app.get("/api/events", (req, res) => {

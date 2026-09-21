@@ -3,6 +3,7 @@ import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion"
 import type { ScoreRecord } from "../types";
 import { scoreStorage } from "../storage";
 import { formatDate } from "../utils/format";
+import { useAdminUnlocked } from "../utils/adminAuth";
 
 interface LeaderboardProps {
   onBack: () => void;
@@ -13,10 +14,13 @@ const DELETE_THRESHOLD = -160;
 interface RowProps {
   record: ScoreRecord;
   index: number;
+  canDelete: boolean;
   onDelete: (id: string) => void;
 }
 
-function SwipeableRow({ record, index, onDelete }: RowProps) {
+// Swipe-to-delete is a maintenance action on a screen every player can open,
+// so the row only becomes draggable once the admin panel has been unlocked.
+function SwipeableRow({ record, index, canDelete, onDelete }: RowProps) {
   const x = useMotionValue(0);
   const isFirst = index === 0;
 
@@ -37,7 +41,7 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
     >
       {/* Draggable content */}
       <motion.div
-        drag="x"
+        drag={canDelete ? "x" : false}
         dragConstraints={{ left: -220, right: 0 }}
         dragElastic={0}
         dragMomentum={false}
@@ -57,7 +61,7 @@ function SwipeableRow({ record, index, onDelete }: RowProps) {
           padding: "14px 16px",
           background: isFirst ? "#141d17" : "var(--color-bg-card)",
           borderRadius: "7px",
-          cursor: "grab",
+          cursor: canDelete ? "grab" : "default",
           userSelect: "none",
           touchAction: "pan-y",
           position: "relative",
@@ -122,6 +126,7 @@ const POLL_INTERVAL_MS = 3000;
 
 export function Leaderboard({ onBack }: LeaderboardProps) {
   const [scores, setScores] = useState<ScoreRecord[]>([]);
+  const adminUnlocked = useAdminUnlocked();
 
   const loadScores = useCallback(async () => {
     const data = await scoreStorage.getScores();
@@ -156,9 +161,15 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
   }, [loadScores]);
 
   const handleDelete = useCallback(async (id: string) => {
+    const previous = scores;
     setScores((prev) => prev.filter((r) => r.id !== id));
-    await scoreStorage.deleteScore(id);
-  }, []);
+    try {
+      await scoreStorage.deleteScore(id);
+    } catch {
+      // Rejected (most likely a locked admin session) — put the row back.
+      setScores(previous);
+    }
+  }, [scores]);
 
   return (
     <div className="app-container" style={{ justifyContent: "center" }}>
@@ -208,6 +219,7 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
                   key={record.id}
                   record={record}
                   index={index}
+                  canDelete={adminUnlocked}
                   onDelete={handleDelete}
                 />
               ))}

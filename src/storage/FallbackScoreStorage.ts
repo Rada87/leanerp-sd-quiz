@@ -1,6 +1,7 @@
 import type { ScoreRecord } from "../types";
 import type { SaveScoreResult, ScoreStorage } from "./ScoreStorage";
 import { logActivity } from "../utils/activity";
+import { AdminAuthError } from "../utils/adminAuth";
 
 export class FallbackScoreStorage implements ScoreStorage {
   private primary: ScoreStorage;
@@ -15,6 +16,7 @@ export class FallbackScoreStorage implements ScoreStorage {
     try {
       return await this.primary.saveScore(record, options);
     } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       logActivity("score_storage_fallback", {
         operation: "saveScore",
         message: error instanceof Error ? error.message : "Primary score storage failed",
@@ -26,7 +28,8 @@ export class FallbackScoreStorage implements ScoreStorage {
   async getScores(): Promise<ScoreRecord[]> {
     try {
       return await this.primary.getScores();
-    } catch {
+    } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       return this.fallback.getScores();
     }
   }
@@ -34,7 +37,8 @@ export class FallbackScoreStorage implements ScoreStorage {
   async deleteScore(id: string): Promise<void> {
     try {
       await this.primary.deleteScore(id);
-    } catch {
+    } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       await this.fallback.deleteScore(id);
     }
   }
@@ -42,7 +46,8 @@ export class FallbackScoreStorage implements ScoreStorage {
   async clearScores(): Promise<void> {
     try {
       await this.primary.clearScores();
-    } catch {
+    } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       await this.fallback.clearScores();
     }
   }
@@ -50,7 +55,8 @@ export class FallbackScoreStorage implements ScoreStorage {
   async exportScores(): Promise<ScoreRecord[]> {
     try {
       return await this.primary.exportScores();
-    } catch {
+    } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       return this.fallback.exportScores();
     }
   }
@@ -58,7 +64,8 @@ export class FallbackScoreStorage implements ScoreStorage {
   async importScores(records: ScoreRecord[]): Promise<void> {
     try {
       await this.primary.importScores(records);
-    } catch {
+    } catch (error) {
+      if (error instanceof AdminAuthError) throw error;
       await this.fallback.importScores(records);
     }
   }

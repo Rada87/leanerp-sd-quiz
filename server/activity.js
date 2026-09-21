@@ -15,6 +15,8 @@ const METADATA_SCHEMA = {
   connectivity_changed: { online: "boolean" },
   screen_viewed: { previousScreen: "string" },
   settings_opened: { screen: "string" },
+  admin_unlock_attempt: { result: "string" },
+  admin_locked: {},
   questions_loaded: { source: "string", count: "number" },
   questions_load_failed: { message: "longString" },
   queue_state_changed: { state: "string", position: "number", waitingCount: "number" },

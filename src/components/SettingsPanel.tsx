@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSettings } from "../hooks/useSettings";
 import { APP_VERSION } from "../constants";
 import { scoreStorage } from "../storage";
+import { lockAdmin, unlockAdmin, useAdminUnlocked } from "../utils/adminAuth";
+import { logActivity } from "../utils/activity";
 import type { ScoreRecord } from "../types";
 
 interface SettingsPanelProps {
@@ -18,10 +20,43 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
   const { settings, setSoundEnabled } = useSettings();
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState("");
+  const adminUnlocked = useAdminUnlocked();
+  const [password, setPassword] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [unlocking, setUnlocking] = useState(false);
 
   const flash = (msg: string) => {
     setStatus(msg);
     setTimeout(() => setStatus(""), 3000);
+  };
+
+  const handleUnlock = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!password || unlocking) return;
+    setUnlocking(true);
+    const result = await unlockAdmin(password);
+    setUnlocking(false);
+    setPassword("");
+    logActivity("admin_unlock_attempt", { result });
+    if (result === "ok") {
+      setUnlockError("");
+      return;
+    }
+    setUnlockError(
+      result === "throttled"
+        ? "Too many attempts. Wait a few minutes."
+        : result === "unavailable"
+          ? "Server unavailable."
+          : "Wrong password."
+    );
+  };
+
+  const handleLock = () => {
+    lockAdmin();
+    setUnlockError("");
+    logActivity("admin_locked", {});
+    onClose();
+    onHome();
   };
 
   const handleExport = async () => {
@@ -152,6 +187,56 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                 Admin & data
               </div>
 
+              <button
+                className="btn-secondary"
+                onClick={() => { onLeaderboard(); onClose(); }}
+                style={{
+                  padding: "10px 16px",
+                  minHeight: "auto",
+                  fontSize: "0.85rem",
+                  width: "100%",
+                  marginBottom: 8,
+                }}
+              >
+                View Leaderboard
+              </button>
+
+              {/* Everything below deletes, reveals or rewrites data, so it
+                  stays out of reach on a tablet anyone can pick up. The server
+                  enforces the same gate — this only hides the buttons. */}
+              {!adminUnlocked ? (
+                <form onSubmit={handleUnlock} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setUnlockError(""); }}
+                    placeholder="Admin password"
+                    autoComplete="off"
+                    style={{
+                      padding: "10px 12px",
+                      fontSize: "0.85rem",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--color-border)",
+                      background: "var(--color-bg)",
+                      color: "var(--color-text)",
+                      width: "100%",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    className="btn-secondary"
+                    disabled={unlocking || !password}
+                    style={{ padding: "10px 16px", minHeight: "auto", fontSize: "0.85rem" }}
+                  >
+                    {unlocking ? "Unlocking…" : "Unlock"}
+                  </button>
+                  {unlockError && (
+                    <div style={{ fontSize: "0.78rem", color: "var(--color-danger, #ff6b6b)", textAlign: "center" }}>
+                      {unlockError}
+                    </div>
+                  )}
+                </form>
+              ) : (
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 8 }}
               >
@@ -176,17 +261,6 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                   }}
                 >
                   Edit Questions
-                </button>
-                <button
-                  className="btn-secondary"
-                  onClick={() => { onLeaderboard(); onClose(); }}
-                  style={{
-                    padding: "10px 16px",
-                    minHeight: "auto",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  View Leaderboard
                 </button>
                 <a
                   href="https://srv1848295.hstgr.cloud/www/leanerp-skodadays-2026/"
@@ -234,15 +308,23 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                 >
                   Clear Leaderboard
                 </button>
-              </div>
+                <button
+                  className="btn-secondary"
+                  onClick={handleLock}
+                  style={{ padding: "10px 16px", minHeight: "auto", fontSize: "0.85rem" }}
+                >
+                  Lock admin
+                </button>
 
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".json"
-                onChange={handleImport}
-                style={{ display: "none" }}
-              />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  style={{ display: "none" }}
+                />
+              </div>
+              )}
 
               {status && (
                 <motion.div

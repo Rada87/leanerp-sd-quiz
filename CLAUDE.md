@@ -61,6 +61,22 @@ Když je server nedostupný, kvíz hráče **pustí hrát i bez fronty** (`App.t
 
 **Ladění:** konzole obou stran loguje pod prefixy `[quiz-mirror]`, `[quiz-sync]` a `[quiz-queue]`, včetně stavového řádku po 30 s (odhalí stream, který je `OPEN`, ale mlčí).
 
+**Admin zámek.** Všechno, co maže, přepisuje nebo odhaluje data, je za heslem:
+`Clear Leaderboard`, `Export/Import JSON`, `Edit Questions`, `Activity Report`
+a swipe-to-delete na leaderboardu. Heslo je `ADMIN_PASSWORD` v `.env`
+(fallback v `server/admin.js`, pokud proměnná chybí). `POST /api/admin/session`
+vrátí token, který klient posílá v hlavičce `x-admin-token`; `requireAdmin`
+v `server/routes.js` jím chrání příslušné routy — **schování tlačítek v UI je
+jen kosmetika, autoritativní je server**.
+
+Token žije **jen v paměti** (`src/utils/adminAuth.ts`), stejně jako queue
+identita: tablet ponechaný na stojanu se po reloadu sám zamkne. Herní cesta
+heslo nikdy nepotřebuje — `POST /scores`, fronta, `GET /leaderboard`
+i zrcadlení zůstávají veřejné, aby zámek nemohl zablokovat hru.
+
+`FallbackScoreStorage` na 401 **nesmí** spadnout do localStorage zálohy —
+jinak by neautorizované „clear" tiše smazalo lokální kopii místo odmítnutí.
+
 **Activity logging:** `POST /api/activity` ukládá do SQLite pouze whitelistované anonymní události. Nikdy do něj neposílat zadané jméno hráče, text otázky/odpovědi ani queue `clientId`. Korelace používá paměťové `sessionId`, `quizRunId` a náhodný alias `Player_XXXXXX`; odpověď ukládá pouze option ID a písmeno A/B/C/D. `EVENT_START_AT`/`EVENT_END_AT` určují before/during/after fáze reportu a `ACTIVITY_RETENTION_DAYS` výchozí 180denní retenci. Souhrn je `/api/activity/summary`, anonymní timeline `/api/activity/export`.
 
 **Verze je na třech místech** a synchronizuje se ručně: `src/constants.ts` (`APP_VERSION`), `package.json` a `index.html` prezentace (`.settings-version`). Prezentace nemá build, takže ji z `package.json` vytáhnout nelze.

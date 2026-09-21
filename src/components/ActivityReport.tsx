@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { logActivity } from "../utils/activity";
+import { adminHeaders, handleAdminRejection } from "../utils/adminAuth";
 
 interface ActivityStats {
   phase: string;
@@ -67,7 +68,11 @@ interface ActivityReportProps {
 const apiBase = `${import.meta.env.BASE_URL}api`;
 
 async function fetchActivitySummary(): Promise<ActivitySummary> {
-  const response = await fetch(`${apiBase}/activity/summary`, { cache: "no-store" });
+  const response = await fetch(`${apiBase}/activity/summary`, { cache: "no-store", headers: adminHeaders() });
+  if (response.status === 401) {
+    handleAdminRejection();
+    throw new Error("Admin session expired — unlock the settings panel again.");
+  }
   if (!response.ok) throw new Error(`Activity API returned ${response.status}`);
   return response.json();
 }
@@ -135,7 +140,11 @@ export function ActivityReport({ onBack }: ActivityReportProps) {
   const handleExport = async () => {
     setStatus("Preparing export…");
     try {
-      const response = await fetch(`${apiBase}/activity/export?limit=50000`, { cache: "no-store" });
+      const response = await fetch(`${apiBase}/activity/export?limit=50000`, { cache: "no-store", headers: adminHeaders() });
+      if (response.status === 401) {
+        handleAdminRejection();
+        throw new Error("Admin session expired — unlock the settings panel again.");
+      }
       if (!response.ok) throw new Error(`Activity export returned ${response.status}`);
       const payload = await response.json();
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });

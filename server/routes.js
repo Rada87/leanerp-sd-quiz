@@ -3,6 +3,7 @@ import { db } from "./db.js";
 import { broadcast, getLatest } from "./events.js";
 import * as queue from "./queue.js";
 import { activitySummary, exportActivity, recordActivity } from "./activity.js";
+import { closeSession, isValidToken, openSession, requireAdmin } from "./admin.js";
 
 const LEADERBOARD_TOP_N = 10;
 
@@ -43,6 +44,27 @@ function questionFromRow(row) {
 
 export const router = Router();
 
+// --- Admin session (password gate for maintenance actions) ---
+
+router.post("/admin/session", (req, res) => {
+  const result = openSession(req.body?.password, req.ip);
+  if (result.error === "too_many_attempts") {
+    return res.status(429).json({ error: "too many attempts, try again later" });
+  }
+  if (result.error) return res.status(401).json({ error: "invalid password" });
+  res.json(result);
+});
+
+router.get("/admin/session", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ valid: isValidToken(req.get("x-admin-token")) });
+});
+
+router.delete("/admin/session", (req, res) => {
+  closeSession(req.get("x-admin-token"));
+  res.status(204).end();
+});
+
 // --- Privacy-first activity logging ---
 
 router.post("/activity", (req, res) => {
@@ -61,12 +83,12 @@ router.post("/activity", (req, res) => {
   }
 });
 
-router.get("/activity/summary", (req, res) => {
+router.get("/activity/summary", requireAdmin, (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json(activitySummary(req.query));
 });
 
-router.get("/activity/export", (req, res) => {
+router.get("/activity/export", requireAdmin, (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json(exportActivity(req.query));
 });
@@ -90,7 +112,7 @@ router.get("/leaderboard", (_req, res) => {
   res.json({ updatedAt: new Date().toISOString(), entries: rows.map(publicLeaderboardEntryFromRow) });
 });
 
-router.get("/scores/export", (_req, res) => {
+router.get("/scores/export", requireAdmin, (_req, res) => {
   const rows = db.prepare("SELECT * FROM scores ORDER BY score DESC").all();
   res.json(rows.map(scoreFromRow));
 });
@@ -162,7 +184,7 @@ router.post("/scores", (req, res) => {
   res.status(201).json({ ok: true, rank, totalPlayers });
 });
 
-router.post("/scores/import", (req, res) => {
+router.post("/scores/import", requireAdmin, (req, res) => {
   const records = req.body;
   const upsert = db.prepare(`
     INSERT INTO scores (id, player_name, score, max_score, percentage, correct_answers, total_questions, created_at)
@@ -183,12 +205,12 @@ router.post("/scores/import", (req, res) => {
   res.json({ ok: true });
 });
 
-router.delete("/scores/:id", (req, res) => {
+router.delete("/scores/:id", requireAdmin, (req, res) => {
   db.prepare("DELETE FROM scores WHERE id = ?").run(req.params.id);
   res.json({ ok: true });
 });
 
-router.delete("/scores", (_req, res) => {
+router.delete("/scores", requireAdmin, (_req, res) => {
   db.prepare("DELETE FROM scores").run();
   res.json({ ok: true });
 });
@@ -200,7 +222,7 @@ router.get("/questions", (_req, res) => {
   res.json(rows.map(questionFromRow));
 });
 
-router.post("/questions", (req, res) => {
+router.post("/questions", requireAdmin, (req, res) => {
   const q = req.body;
   db.prepare(`
     INSERT INTO questions (id, category, question, options, correct_option_id, explanation)
@@ -215,7 +237,7 @@ router.post("/questions", (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-router.delete("/questions/:id", (req, res) => {
+router.delete("/questions/:id", requireAdmin, (req, res) => {
   db.prepare("DELETE FROM questions WHERE id = ?").run(req.params.id);
   res.json({ ok: true });
 });

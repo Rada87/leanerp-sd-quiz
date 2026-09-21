@@ -21,6 +21,16 @@ Kvízová aplikace pro Škoda / LeanERP Service Desk. React 19 + TypeScript + Vi
 - Frontend mluví s backendem přes relativní `/api/...` fetch, žádné externí služby ani API klíče nejsou potřeba.
 - Otázky se při prvním startu naseedují z `dist/questions.json` (bývalá statická sada), pokud je tabulka `questions` prázdná.
 
+## Admin zámek
+
+Údržbové akce (`Clear Leaderboard`, `Export/Import JSON`, `Edit Questions`,
+`Activity Report`, mazání záznamu swipnutím) jsou schované za heslem. Zadává se
+v panelu ⚙ → *Admin & data*; odemčení platí jen pro dané načtení stránky,
+reload tablet zase zamkne.
+
+Heslo se nastavuje proměnnou `ADMIN_PASSWORD` v `.env` (viz `.env.example`).
+Hraní kvízu heslo nikdy nevyžaduje.
+
 ## Activity logging
 
 Aplikace ukládá do SQLite anonymní provozní události pro ladění a vyhodnocení eventu. Nezapisuje IP adresy, zadaná jména hráčů, texty otázek ani texty odpovědí. Jedno načtení stránky má náhodné `sessionId`; každá hra má náhodné `quizRunId` a alias `Player_XXXXXX`. U odpovědi se ukládá ID možnosti a písmeno A/B/C/D, aby šlo analyzovat distraktory. Queue `clientId` se nepersistuje.
