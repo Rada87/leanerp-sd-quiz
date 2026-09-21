@@ -9,9 +9,11 @@ const DIST_DIR = path.join(__dirname, "..", "dist");
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-// Nginx passes X-Forwarded-For, so admin login throttling counts real
-// clients instead of locking everyone out through one proxy address.
-app.set("trust proxy", true);
+// Exactly one hop: Nginx appends the real peer to X-Forwarded-For, so the
+// last entry is trustworthy while anything the client sent ahead of it is
+// not. Trusting the whole chain would let a caller forge an address per
+// attempt to dodge login throttling, or burn through someone else's limit.
+app.set("trust proxy", 1);
 app.use(express.json());
 
 app.get("/api/events", (req, res) => {

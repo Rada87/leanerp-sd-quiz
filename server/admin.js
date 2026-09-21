@@ -1,10 +1,21 @@
 import crypto from "node:crypto";
 
-// The fallback keeps a freshly pulled deployment usable without touching .env;
-// set ADMIN_PASSWORD there to override it.
-const PASSWORD = process.env.ADMIN_PASSWORD || "Wob202!";
+// No fallback on purpose: a default baked into the repository would be a
+// published password, and every deployment that never edited .env would share
+// it. Without ADMIN_PASSWORD the admin routes simply stay shut — the quiz
+// itself keeps running, which is the safe direction to fail during an event.
+const PASSWORD = process.env.ADMIN_PASSWORD || "";
+const CONFIGURED = PASSWORD.length > 0;
+
+if (!CONFIGURED) {
+  console.warn(
+    "[admin] ADMIN_PASSWORD is not set — maintenance actions are disabled. " +
+      "Set it in .env to enable the admin panel."
+  );
+}
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const ATTEMPT_WINDOW_MS = 2 * 60 * 1000;
+const MAX_TRACKED_IPS = 5000;
 // Generous enough that a mistyped password during the event never locks the
 // admin out for long, tight enough to make guessing pointless.
 const MAX_ATTEMPTS = 20;
@@ -16,6 +27,13 @@ const attempts = new Map(); // ip -> { count, resetAt }
 
 function now() {
   return Date.now();
+}
+
+function pruneAttempts() {
+  const t = now();
+  for (const [ip, entry] of attempts) {
+    if (entry.resetAt <= t) attempts.delete(ip);
+  }
 }
 
 function pruneSessions() {
@@ -45,13 +63,24 @@ function throttled(ip) {
 function recordFailure(ip) {
   const entry = attempts.get(ip);
   if (!entry || entry.resetAt <= now()) {
+    // One failed attempt per address would otherwise be remembered forever;
+    // sweep the expired ones before the map can grow without bound.
+    if (attempts.size >= MAX_TRACKED_IPS) pruneAttempts();
     attempts.set(ip, { count: 1, resetAt: now() + ATTEMPT_WINDOW_MS });
     return;
   }
   entry.count += 1;
 }
 
+// A server that stops seeing login attempts should not keep the last ones
+// in memory either. unref() keeps this timer from holding the process open.
+setInterval(() => {
+  pruneAttempts();
+  pruneSessions();
+}, ATTEMPT_WINDOW_MS).unref();
+
 export function openSession(password, ip) {
+  if (!CONFIGURED) return { error: "not_configured" };
   if (throttled(ip)) return { error: "too_many_attempts" };
   if (!matchesPassword(password)) {
     recordFailure(ip);
@@ -87,6 +116,9 @@ function tokenOf(req) {
 // Guards every destructive or data-revealing route. The quiz itself never
 // passes through here — an admin lockout must not stop anyone from playing.
 export function requireAdmin(req, res, next) {
+  if (!CONFIGURED) {
+    return res.status(503).json({ error: "admin password is not configured on the server" });
+  }
   if (isValidToken(tokenOf(req))) return next();
   res.status(401).json({ error: "admin authentication required" });
 }

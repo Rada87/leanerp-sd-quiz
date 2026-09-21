@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSettings } from "../hooks/useSettings";
 import { APP_VERSION } from "../constants";
 import { scoreStorage } from "../storage";
-import { lockAdmin, unlockAdmin, useAdminUnlocked } from "../utils/adminAuth";
+import { AdminAuthError, lockAdmin, unlockAdmin, useAdminUnlocked } from "../utils/adminAuth";
 import { logActivity } from "../utils/activity";
 import type { ScoreRecord } from "../types";
 
@@ -45,9 +45,11 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
     setUnlockError(
       result === "throttled"
         ? "Too many attempts. Wait a few minutes."
-        : result === "unavailable"
-          ? "Server unavailable."
-          : "Wrong password."
+        : result === "not_configured"
+          ? "No admin password set on the server."
+          : result === "unavailable"
+            ? "Server unavailable."
+            : "Wrong password."
     );
   };
 
@@ -60,7 +62,17 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
   };
 
   const handleExport = async () => {
-    const scores = await scoreStorage.exportScores();
+    let scores;
+    try {
+      scores = await scoreStorage.exportScores();
+    } catch (error) {
+      flash(
+        error instanceof AdminAuthError
+          ? "Admin session expired — unlock again"
+          : "Export failed"
+      );
+      return;
+    }
     const blob = new Blob([JSON.stringify(scores, null, 2)], {
       type: "application/json",
     });
@@ -82,18 +94,31 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
       if (!Array.isArray(data)) throw new Error("bad format");
       await scoreStorage.importScores(data);
       flash(`Imported ${data.length} records`);
-    } catch {
-      flash("Invalid JSON file");
+    } catch (error) {
+      // A rejected session must not look like a broken file.
+      flash(
+        error instanceof AdminAuthError
+          ? "Admin session expired — unlock again"
+          : "Invalid JSON file"
+      );
     }
     if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleClear = async () => {
-    if (window.confirm("Clear all leaderboard data? This cannot be undone.")) {
+    if (!window.confirm("Clear all leaderboard data? This cannot be undone.")) return;
+    try {
       await scoreStorage.clearScores();
-      onClose();
-      onHome();
+    } catch (error) {
+      flash(
+        error instanceof AdminAuthError
+          ? "Admin session expired — unlock again"
+          : "Clearing failed"
+      );
+      return;
     }
+    onClose();
+    onHome();
   };
 
   return (

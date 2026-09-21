@@ -32,7 +32,7 @@ export function adminHeaders(): Record<string, string> {
   return token ? { "x-admin-token": token } : {};
 }
 
-export type UnlockResult = "ok" | "invalid" | "throttled" | "unavailable";
+export type UnlockResult = "ok" | "invalid" | "throttled" | "not_configured" | "unavailable";
 
 export async function unlockAdmin(password: string): Promise<UnlockResult> {
   try {
@@ -43,6 +43,7 @@ export async function unlockAdmin(password: string): Promise<UnlockResult> {
     });
     if (res.status === 401) return "invalid";
     if (res.status === 429) return "throttled";
+    if (res.status === 503) return "not_configured";
     if (!res.ok) return "unavailable";
     const data = await res.json();
     if (typeof data?.token !== "string") return "unavailable";

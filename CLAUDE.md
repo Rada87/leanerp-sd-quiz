@@ -63,8 +63,9 @@ Když je server nedostupný, kvíz hráče **pustí hrát i bez fronty** (`App.t
 
 **Admin zámek.** Všechno, co maže, přepisuje nebo odhaluje data, je za heslem:
 `Clear Leaderboard`, `Export/Import JSON`, `Edit Questions`, `Activity Report`
-a swipe-to-delete na leaderboardu. Heslo je `ADMIN_PASSWORD` v `.env`
-(fallback v `server/admin.js`, pokud proměnná chybí). `POST /api/admin/session`
+a swipe-to-delete na leaderboardu. Heslo je `ADMIN_PASSWORD` v `.env` a **žádný výchozí fallback neexistuje** —
+zabudované heslo v repozitáři je veřejné heslo. Když proměnná chybí, admin
+routy vrací 503 a panel to hlásí; hra běží dál. `POST /api/admin/session`
 vrátí token, který klient posílá v hlavičce `x-admin-token`; `requireAdmin`
 v `server/routes.js` jím chrání příslušné routy — **schování tlačítek v UI je
 jen kosmetika, autoritativní je server**.
@@ -73,6 +74,12 @@ Token žije **jen v paměti** (`src/utils/adminAuth.ts`), stejně jako queue
 identita: tablet ponechaný na stojanu se po reloadu sám zamkne. Herní cesta
 heslo nikdy nepotřebuje — `POST /scores`, fronta, `GET /leaderboard`
 i zrcadlení zůstávají veřejné, aby zámek nemohl zablokovat hru.
+
+Throttle počítá **poslední** hop `X-Forwarded-For` (`trust proxy` = 1
+v `server/index.js`), protože Nginx přidává skutečnou IP na konec a cokoli před
+ní poslal klient sám. Důvěřovat celému řetězci by znamenalo, že si útočník
+podvrhne novou IP na každý pokus, nebo vyčerpá limit obsluze. Testy v
+`server/admin.test.js` (`npm test`) obojí hlídají.
 
 `FallbackScoreStorage` na 401 **nesmí** spadnout do localStorage zálohy —
 jinak by neautorizované „clear" tiše smazalo lokální kopii místo odmítnutí.

@@ -13,6 +13,7 @@ Kvízová aplikace pro Škoda / LeanERP Service Desk. React 19 + TypeScript + Vi
 | `npm run start` | `build` + `server` — produkční běh mimo Docker |
 | `npm run preview` | Lokálně zobrazí produkční build (po `npm run build`) |
 | `npm run lint` | Spustí ESLint kontrolu kódu |
+| `npm test` | Spustí testy serveru (admin přihlášení, throttling) |
 
 ## Architektura
 
@@ -29,7 +30,8 @@ v panelu ⚙ → *Admin & data*; odemčení platí jen pro dané načtení strá
 reload tablet zase zamkne.
 
 Heslo se nastavuje proměnnou `ADMIN_PASSWORD` v `.env` (viz `.env.example`).
-Hraní kvízu heslo nikdy nevyžaduje.
+Výchozí heslo neexistuje: bez nastavené proměnné zůstanou údržbové akce
+vypnuté (server na ně vrací 503) a kvíz běží dál. Hraní heslo nikdy nevyžaduje.
 
 ## Activity logging
 

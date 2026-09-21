@@ -30,6 +30,9 @@ dist-ssr
 # Temporary files
 tmp/
 
+# Local question/leaderboard backups (contain answers and player names)
+backups/
+
 # Local agent planning notes
 task_plan.md
 findings.md
