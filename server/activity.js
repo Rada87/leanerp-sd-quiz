@@ -17,6 +17,7 @@ const METADATA_SCHEMA = {
   settings_opened: { screen: "string" },
   admin_unlock_attempt: { result: "string" },
   admin_locked: {},
+  visit_limit_reached: { screen: "string" },
   questions_loaded: { source: "string", count: "number" },
   questions_load_failed: { message: "longString" },
   queue_state_changed: { state: "string", position: "number", waitingCount: "number" },

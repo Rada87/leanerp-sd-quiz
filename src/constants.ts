@@ -4,9 +4,12 @@ export const MIN_POINTS_CORRECT = 10;
 export const SCORING_EXPONENT = 0.55;
 export const FEEDBACK_AUTO_ADVANCE_MS = 2000;
 export const KIOSK_IDLE_TIMEOUT_MS = 45_000;
+// How long a visitor's own device may play, from its first quiz start. The
+// stand's tablets are exempt — see src/utils/visitSession.ts.
+export const VISIT_TIME_LIMIT_MS = 15 * 60_000;
 export const LEADERBOARD_TOP_N = 10;
 export const QUIZ_QUESTION_COUNT = 5;
 export const STORAGE_KEY = "leanerp-quiz-scores";
 // Shown in the settings panel. Keep in step with package.json and with the
 // presentation's own version label.
-export const APP_VERSION = "1.8.2";
+export const APP_VERSION = "1.9.0";

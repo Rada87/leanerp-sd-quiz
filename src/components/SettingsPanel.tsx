@@ -4,6 +4,7 @@ import { useSettings } from "../hooks/useSettings";
 import { APP_VERSION } from "../constants";
 import { scoreStorage } from "../storage";
 import { AdminAuthError, lockAdmin, unlockAdmin, useAdminUnlocked } from "../utils/adminAuth";
+import { disableKiosk, enableKiosk, isKioskDevice } from "../utils/visitSession";
 import { logActivity } from "../utils/activity";
 import type { ScoreRecord } from "../types";
 
@@ -24,6 +25,7 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
   const [password, setPassword] = useState("");
   const [unlockError, setUnlockError] = useState("");
   const [unlocking, setUnlocking] = useState(false);
+  const [kiosk, setKiosk] = useState(isKioskDevice);
 
   const flash = (msg: string) => {
     setStatus(msg);
@@ -59,6 +61,20 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
     logActivity("admin_locked", {});
     onClose();
     onHome();
+  };
+
+  // A stand tablet plays all day; a visitor's own device gets a time limit.
+  // Same switch as opening the quiz with ?kiosk=1.
+  const handleKioskToggle = () => {
+    if (kiosk) {
+      disableKiosk();
+      setKiosk(false);
+      flash("Kiosk mode off — this device now has a play limit");
+    } else {
+      enableKiosk();
+      setKiosk(true);
+      flash("Kiosk mode on — no play limit on this device");
+    }
   };
 
   const handleExport = async () => {
@@ -332,6 +348,13 @@ export function SettingsPanel({ isOpen, onClose, onLeaderboard, onHome, onEditor
                   style={{ padding: "10px 16px", fontSize: "0.85rem" }}
                 >
                   Clear Leaderboard
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={handleKioskToggle}
+                  style={{ padding: "10px 16px", minHeight: "auto", fontSize: "0.85rem" }}
+                >
+                  {kiosk ? "Kiosk mode: ON" : "Kiosk mode: off"}
                 </button>
                 <button
                   className="btn-secondary"

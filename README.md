@@ -33,6 +33,15 @@ Heslo se nastavuje proměnnou `ADMIN_PASSWORD` v `.env` (viz `.env.example`).
 Výchozí heslo neexistuje: bez nastavené proměnné zůstanou údržbové akce
 vypnuté (server na ně vrací 503) a kvíz běží dál. Hraní heslo nikdy nevyžaduje.
 
+## Časový limit pro návštěvníky
+
+Zařízení návštěvníka může hrát 15 minut od prvního spuštění kvízu
+(`VISIT_TIME_LIMIT_MS` v `src/constants.ts`), pak se zobrazí děkovná obrazovka.
+
+**Tablety na stánku je potřeba jednou otevřít s `?kiosk=1`** — tím se trvale
+vyjmou z limitu (nebo přepnout tlačítkem „Kiosk mode" v admin panelu).
+`?kiosk=1` odblokuje i zařízení, které už do limitu spadlo; `?kiosk=0` režim zruší.
+
 ## Activity logging
 
 Aplikace ukládá do SQLite anonymní provozní události pro ladění a vyhodnocení eventu. Nezapisuje IP adresy, zadaná jména hráčů, texty otázek ani texty odpovědí. Jedno načtení stránky má náhodné `sessionId`; každá hra má náhodné `quizRunId` a alias `Player_XXXXXX`. U odpovědi se ukládá ID možnosti a písmeno A/B/C/D, aby šlo analyzovat distraktory. Queue `clientId` se nepersistuje.

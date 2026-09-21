@@ -84,6 +84,24 @@ podvrhne novou IP na každý pokus, nebo vyčerpá limit obsluze. Testy v
 `FallbackScoreStorage` na 401 **nesmí** spadnout do localStorage zálohy —
 jinak by neautorizované „clear" tiše smazalo lokální kopii místo odmítnutí.
 
+**Časový limit návštěvnického zařízení.** `src/utils/visitSession.ts`: od prvního
+spuštění hry běží `VISIT_TIME_LIMIT_MS` (15 min), po vypršení se **okamžitě**
+(i uprostřed otázky, rozehraná hra se neuloží) zobrazí `FarewellScreen` a uvolní
+se slot fronty. Důvod není šetření zdrojů, ale fronta: je globální, takže kdo
+hraje z kanceláře, bere slot lidem u stánku.
+
+Na rozdíl od queue identity se tenhle stav **musí** ukládat do `localStorage`
+(`leanerp-quiz-visit-started-at`) — limit, který smaže reload, nikoho nezastaví.
+Jde o zpomalení, ne zámek: anonymní okno nebo smazání dat ho resetuje, a to je
+v pořádku.
+
+**Tablety na stánku musí být v kiosk režimu**, jinak se po 15 minutách zablokují
+taky. Otevřít jednou `?kiosk=1` (uloží `leanerp-quiz-kiosk`, přežije restart)
+nebo přepnout v admin panelu. `?kiosk=1` zároveň vyléčí už zablokované zařízení —
+na děkovné obrazovce žádné ovládání není. `?kiosk=0` režim zruší.
+
+Limit **selhává otevřeně**: když `localStorage` není dostupný, hraje se bez omezení.
+
 **Activity logging:** `POST /api/activity` ukládá do SQLite pouze whitelistované anonymní události. Nikdy do něj neposílat zadané jméno hráče, text otázky/odpovědi ani queue `clientId`. Korelace používá paměťové `sessionId`, `quizRunId` a náhodný alias `Player_XXXXXX`; odpověď ukládá pouze option ID a písmeno A/B/C/D. `EVENT_START_AT`/`EVENT_END_AT` určují before/during/after fáze reportu a `ACTIVITY_RETENTION_DAYS` výchozí 180denní retenci. Souhrn je `/api/activity/summary`, anonymní timeline `/api/activity/export`.
 
 **Verze je na třech místech** a synchronizuje se ručně: `src/constants.ts` (`APP_VERSION`), `package.json` a `index.html` prezentace (`.settings-version`). Prezentace nemá build, takže ji z `package.json` vytáhnout nelze.

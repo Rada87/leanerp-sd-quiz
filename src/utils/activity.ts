@@ -24,6 +24,7 @@ export type ActivityEventName =
   | "activity_report_viewed"
   | "activity_exported"
   | "idle_reset"
+  | "visit_limit_reached"
   | "score_storage_fallback"
   | "presentation_sync_failed"
   | "client_error";

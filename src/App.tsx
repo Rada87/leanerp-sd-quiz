@@ -13,10 +13,12 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { QuestionsEditor } from "./components/QuestionsEditor";
 import { WaitingScreen } from "./components/WaitingScreen";
 import { ActivityReport } from "./components/ActivityReport";
+import { FarewellScreen } from "./components/FarewellScreen";
 import { useQueue } from "./hooks/useQueue";
 import { useActivityTracking } from "./hooks/useActivityTracking";
 import { getClientId } from "./utils/clientId";
 import { useAdminUnlocked } from "./utils/adminAuth";
+import { initVisitSession, isVisitBlocked, startVisitClock } from "./utils/visitSession";
 import { questionSource, questionStorage } from "./storage/QuestionStorage";
 import { syncPresentation } from "./utils/presentationSync";
 import { beginQuizActivity, logActivity } from "./utils/activity";
@@ -40,6 +42,8 @@ function GearIcon() {
   );
 }
 
+initVisitSession();
+
 function AppContent() {
   const quiz = useQuizState();
   const queue = useQueue();
@@ -48,6 +52,7 @@ function AppContent() {
   const [pendingName, setPendingName] = useState("");
   const clientId = getClientId();
   const adminUnlocked = useAdminUnlocked();
+  const [visitBlocked, setVisitBlocked] = useState(isVisitBlocked);
   const lastQueueStateKey = useRef("");
   const isQueued = queue.snapshot.state === "waiting" || queue.snapshot.state === "ready";
 
@@ -84,6 +89,24 @@ function AppContent() {
       waitingCount: queue.snapshot.waitingCount,
     });
   }, [queue.snapshot.state, queue.snapshot.position, queue.snapshot.waitingCount]);
+
+  // The play-time limit cuts in the moment it expires, mid-question included,
+  // so a visitor cannot stretch the session by staying inside one long run.
+  useEffect(() => {
+    if (visitBlocked) return;
+    const interval = setInterval(() => {
+      if (isVisitBlocked()) setVisitBlocked(true);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [visitBlocked]);
+
+  // Hand the play slot back: the stand should not wait out a queue timeout
+  // for a device that has stopped playing for good.
+  useEffect(() => {
+    if (!visitBlocked) return;
+    logActivity("visit_limit_reached", { screen: quiz.screen });
+    queue.leave();
+  }, [visitBlocked]);
 
   // Admin-only screens must not stay on a tablet once the session is locked
   // or rejected by the server.
@@ -176,6 +199,7 @@ function AppContent() {
   // Ask the server for the play slot first. If the queue is unreachable we
   // start anyway — a queue outage must never stop people from playing.
   const beginQuiz = useCallback((name: string, queueMode: string) => {
+    startVisitClock();
     beginQuizActivity();
     logActivity("quiz_started", { questionCount: loadedQuestions.length, queueMode });
     quiz.startQuiz(name, loadedQuestions);
@@ -225,6 +249,15 @@ function AppContent() {
   const handleFinish = useCallback(() => {
     quiz.finishQuiz(true);
   }, [quiz.finishQuiz]);
+
+  if (visitBlocked) {
+    return (
+      <div onContextMenu={(e) => e.preventDefault()} style={{ minHeight: "100dvh" }}>
+        <BackgroundPattern />
+        <FarewellScreen />
+      </div>
+    );
+  }
 
   return (
     <div
