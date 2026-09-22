@@ -207,7 +207,13 @@
         try {
           const state = await call("/admin/queue/stop", { method: "POST", body: JSON.stringify({ clientId }) });
           render(state);
-          flash(el("queue-status"), "Game stopped — that tablet is back at the start screen.", true);
+          flash(
+            el("queue-status"),
+            state.stopped
+              ? "Game stopped — that tablet is back at the start screen."
+              : "That player had already left; nothing to stop.",
+            state.stopped
+          );
         } catch (error) {
           flash(el("queue-status"), error.message, false);
         }

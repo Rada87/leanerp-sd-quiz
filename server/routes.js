@@ -176,6 +176,9 @@ router.post("/queue/leave", queueHandler((id) => queue.leave(id)));
 // Lightweight relay for live quiz-progress mirroring on the presentation
 // display. No persistence — just re-broadcast to any connected SSE clients.
 router.post("/session", (req, res) => {
+  // The tablet keeps playing after a kick — it just stops being the stand's
+  // game, so its frames no longer belong on the big screen.
+  if (queue.isMirrorSilenced(req.body?.clientId)) return res.status(204).end();
   broadcast("quiz_progress", req.body);
   res.status(204).end();
 });
@@ -194,7 +197,7 @@ router.post("/scores", (req, res) => {
     .get(r);
   const { totalPlayers } = db.prepare("SELECT COUNT(*) AS totalPlayers FROM scores").get();
 
-  if (req.body.broadcast !== false) {
+  if (req.body.broadcast !== false && !queue.isMirrorSilenced(r.clientId)) {
     broadcast("quiz_completed", {
       clientId: r.clientId,
       playerName: r.playerName,

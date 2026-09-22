@@ -15,6 +15,8 @@ export interface QueueMember {
 export interface QueueSnapshot {
   state: QueueState;
   position: number;
+  /** Set by the server while this client's run has been stopped by the stand. */
+  stopped?: boolean;
   active: QueueMember | null;
   ready: QueueMember | null;
   waiting: QueueMember[];
@@ -81,6 +83,13 @@ export function useQueue() {
     stateRef.current = snapshot.state;
   }, [snapshot.state]);
 
+  // One place where a stop is acted on, whichever transport delivered it.
+  const noteStopped = useCallback(() => {
+    stateRef.current = "idle";
+    setSnapshot(emptySnapshot);
+    setStopSignal((n) => n + 1);
+  }, []);
+
   const apply = useCallback((next: QueueSnapshot | null) => {
     if (next) setSnapshot(next);
     return next;
@@ -145,9 +154,7 @@ export function useQueue() {
         const data = JSON.parse(event.data);
         if (data?.clientId !== clientId) return;
         console.log(`${LOG} run ended by the stand console.`);
-        stateRef.current = "idle";
-        setSnapshot(emptySnapshot);
-        setStopSignal((n) => n + 1);
+        noteStopped();
       } catch {
         // ignore malformed frames
       }
@@ -159,18 +166,24 @@ export function useQueue() {
       source.removeEventListener("player_stopped", onPlayerStopped as EventListener);
       source.close();
     };
-  }, [clientId]);
+  }, [clientId, noteStopped]);
 
   // Keep our slot alive while we hold one.
   useEffect(() => {
     const timer = setInterval(() => {
       if (stateRef.current === "idle") return;
       post("/queue/heartbeat", { clientId }).then((next) => {
-        if (next) setSnapshot((prev) => (prev.state === "idle" ? prev : next));
+        if (!next) return;
+        if (next.stopped) {
+          console.log(`${LOG} heartbeat reports the run was stopped by the stand console.`);
+          noteStopped();
+          return;
+        }
+        setSnapshot((prev) => (prev.state === "idle" ? prev : next));
       });
     }, HEARTBEAT_MS);
     return () => clearInterval(timer);
-  }, [clientId]);
+  }, [clientId, noteStopped]);
 
   // Free the slot if the tablet is closed mid-quiz.
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { broadcast } from "./events.js";
+import { broadcast, dropProgressFor } from "./events.js";
 
 // Single-player gate for the quiz. Session state only — deliberately in
 // memory, never SQLite: it must not survive a restart, and the app runs as
@@ -13,6 +13,13 @@ const READY_TIMEOUT_MS = 45000;
 // A tablet still in line that stopped sending heartbeats (closed, asleep).
 const WAITING_TIMEOUT_MS = 60000;
 const SWEEP_INTERVAL_MS = 5000;
+
+// Players the stand has removed. Two jobs, both of which outlive a single
+// SSE frame: the presentation must stop mirroring them, and a tablet that
+// missed the live event has to learn about it from its next heartbeat.
+// Cleared when that client starts a new run, so nothing here is permanent.
+const SILENCE_TTL_MS = 15 * 60 * 1000;
+const silenced = new Map(); // clientId -> { until, stopRun }
 
 let active = null; // { clientId, playerName, lastSeen }
 let ready = null; // { clientId, playerName, lastSeen, readyAt }
@@ -59,12 +66,43 @@ function stateFor(clientId) {
   return { state: "idle", position: 0 };
 }
 
+function silenceEntry(clientId) {
+  const entry = silenced.get(clientId);
+  if (!entry) return null;
+  if (entry.until <= now()) {
+    silenced.delete(clientId);
+    return null;
+  }
+  return entry;
+}
+
+function silence(clientId, stopRun) {
+  for (const [id, entry] of silenced) {
+    if (entry.until <= now()) silenced.delete(id);
+  }
+  silenced.set(clientId, { until: now() + SILENCE_TTL_MS, stopRun });
+}
+
+function unsilence(clientId) {
+  silenced.delete(clientId);
+}
+
+/** True while this client's quiz must not reach the presentation. */
+export function isMirrorSilenced(clientId) {
+  return silenceEntry(clientId) !== null;
+}
+
 function result(clientId) {
-  return { ...stateFor(clientId), ...snapshot() };
+  // Carried on every queue reply, so a tablet that missed the live event
+  // still learns its run was stopped — at the next heartbeat at the latest.
+  const stopRun = silenceEntry(clientId)?.stopRun === true;
+  return { ...stateFor(clientId), ...snapshot(), stopped: stopRun };
 }
 
 export function join(clientId, playerName) {
   const name = playerName || "Guest";
+  // A new run clears any standing removal: being stopped once is not a ban.
+  unsilence(clientId);
   drop(clientId);
 
   if (!active && !ready) {
@@ -80,6 +118,7 @@ export function join(clientId, playerName) {
 
 /** A player whose turn came up tapped "start". */
 export function claim(clientId) {
+  unsilence(clientId);
   if (ready?.clientId === clientId && !active) {
     active = { clientId, playerName: ready.playerName, lastSeen: now() };
     ready = null;
@@ -146,6 +185,12 @@ export function kick(clientId) {
   drop(clientId);
   promote();
   if (known) publish();
+  // The run itself carries on, but it is no longer the stand's game: take it
+  // off the presentation, which is what "removed from the queue" looks like
+  // to everyone watching the big screen.
+  silence(clientId, false);
+  dropProgressFor(clientId);
+  broadcast("mirror_stop", { clientId });
   return { removed: known, ...adminSnapshot() };
 }
 
@@ -160,8 +205,13 @@ export function stopPlayer(clientId) {
   const known = stateFor(clientId).state !== "idle";
   drop(clientId);
   promote();
-  publish();
-  broadcast("player_stopped", { clientId });
+  if (known) publish();
+  silence(clientId, true);
+  dropProgressFor(clientId);
+  broadcast("mirror_stop", { clientId });
+  // Only a client the queue actually knew is told to end its run: a stale or
+  // double click must not knock an unrelated tablet off its screen.
+  if (known) broadcast("player_stopped", { clientId });
   return { stopped: known, ...adminSnapshot() };
 }
 

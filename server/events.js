@@ -59,6 +59,17 @@ export function broadcast(type, data) {
   for (const res of clients) res.write(payload);
 }
 
+/**
+ * Forgets the last progress frame of one player. The polled snapshot would
+ * otherwise keep serving a run the stand has just ended, and a presentation
+ * that reloads would replay it as if it were live.
+ */
+export function dropProgressFor(clientId) {
+  if (latest.progress?.data?.clientId === clientId) {
+    latest.progress = null;
+  }
+}
+
 export function getLatest() {
   if (latest.progress && Date.now() - progressAt > PROGRESS_STALE_MS) {
     latest.progress = null;

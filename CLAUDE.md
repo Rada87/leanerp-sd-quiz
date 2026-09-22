@@ -92,10 +92,22 @@ frontu. Po zadání admin hesla ukazuje živou frontu a umí vykopnout jednotliv
 (`POST /api/admin/queue/stop`); vše je za `requireAdmin`.
 
 Kick jen uvolní slot — rozehraná hra na tabletu běží dál, protože kvíz o frontě
-nic neví a nikdy na ni nečeká. Stop je ostřejší: server pošle SSE událost
-`player_stopped` s `clientId` a tablet se do sekundy vrátí na úvodní obrazovku
-s vysvětlující hláškou, skóre se neuloží. Kvíz tu událost slyší, protože už
-`EventSource` drží kvůli pozicím ve frontě (`src/hooks/useQueue.ts`) — proto
+nic neví a nikdy na ni nečeká. **Zmizí ale z prezentace:** vykopnutý `clientId`
+jde do `silenced` v `queue.js`, server pak jeho `quiz_progress` i `quiz_completed`
+nepropustí do `broadcast()` a `dropProgressFor()` ho vyhodí i z `latest`, aby ho
+neoživil polling. Zároveň odejde SSE událost `mirror_stop`, na kterou prezentace
+zavře zrcadlení (`applyMirrorStop` → `forceExitMirror`, stejná cesta jako Esc).
+Umlčení ruší až `join`/`claim`, takže nová hra se zase zrcadlí — kick není ban.
+
+Stop je ostřejší: navíc pošle `player_stopped` a tablet se do sekundy vrátí na
+úvodní obrazovku s vysvětlující hláškou. **Stav „stopped" nesmí být jen událost** —
+nese ho každá odpověď fronty (`result()`), takže tablet, který SSE zprávu
+propásl, se to dozví nejpozději z heartbeatu. Klient volá `abandonRun()`, které
+zvýší `runIdRef`, takže rozdělaný `saveScore` po dokončení nic nedispatchne ani
+neukáže výsledek. `player_stopped` se posílá **jen pro klienta, kterého fronta
+znala**, aby zastaralý dvojklik neshodil cizí tablet.
+
+Kvíz `EventSource` drží kvůli pozicím ve frontě (`src/hooks/useQueue.ts`) — proto
 neplatí doslova, že „kvíz jen odesílá".
 
 **Časový limit návštěvnického zařízení.** `src/utils/visitSession.ts`: od prvního

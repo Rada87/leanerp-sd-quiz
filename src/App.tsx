@@ -96,10 +96,15 @@ function AppContent() {
   useEffect(() => {
     if (queue.stopSignal === 0) return;
     logActivity("run_stopped_by_staff", { screen: quiz.screen });
-    quiz.goToStart();
-    setStoppedNotice(true);
-    const timer = setTimeout(() => setStoppedNotice(false), 12000);
-    return () => clearTimeout(timer);
+    // abandonRun, not goToStart: a save already in flight must not write a
+    // score or pull the tablet back to the result screen afterwards.
+    quiz.abandonRun();
+    const show = setTimeout(() => setStoppedNotice(true), 0);
+    const hide = setTimeout(() => setStoppedNotice(false), 12000);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
   }, [queue.stopSignal]);
 
   // The play-time limit cuts in the moment it expires, mid-question included,

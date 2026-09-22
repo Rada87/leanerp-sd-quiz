@@ -154,6 +154,10 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
 export function useQuizState() {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const scoreSavedRef = useRef(false);
+  // Identifies one run. abandonRun() bumps it, so a save that is already in
+  // flight when the run is cut short cannot write a score or drag the screen
+  // back to the result once it resolves.
+  const runIdRef = useRef(0);
   const clientId = getClientId();
 
   const maxScore = state.questions.length * MAX_POINTS_PER_QUESTION;
@@ -168,7 +172,20 @@ export function useQuizState() {
 
   const startQuiz = useCallback((playerName: string, questions: Question[]) => {
     scoreSavedRef.current = false;
+    runIdRef.current += 1;
     dispatch({ type: "START_QUIZ", playerName, questions });
+  }, []);
+
+  /**
+   * Ends the current run without a result: the stand console stopping this
+   * tablet, or the visitor's play time running out. Marks the score as
+   * handled so a pending save is discarded rather than landing on the
+   * leaderboard after the fact.
+   */
+  const abandonRun = useCallback(() => {
+    runIdRef.current += 1;
+    scoreSavedRef.current = true;
+    dispatch({ type: "GO_TO_START" });
   }, []);
 
   const selectAnswer = useCallback(
@@ -189,6 +206,7 @@ export function useQuizState() {
   const saveAndShowResult = useCallback(async (broadcast: boolean) => {
     if (scoreSavedRef.current) return;
     scoreSavedRef.current = true;
+    const runId = runIdRef.current;
     const maxS = state.questions.length * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
     const { rank, totalPlayers } = await scoreStorage.saveScore(
@@ -205,6 +223,7 @@ export function useQuizState() {
       },
       { broadcast }
     );
+    if (runId !== runIdRef.current) return; // run was cut short while saving
     dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "CONTINUE_TO_NEXT" });
   }, [clientId, state.score, state.playerName, state.correctAnswers, state.questions.length]);
@@ -212,6 +231,7 @@ export function useQuizState() {
   const finishQuiz = useCallback(async (broadcast: boolean) => {
     if (scoreSavedRef.current) return;
     scoreSavedRef.current = true;
+    const runId = runIdRef.current;
     const total = state.questions.length;
     const maxS = total * MAX_POINTS_PER_QUESTION;
     const pct = maxS > 0 ? Math.round((state.score / maxS) * 100) : 0;
@@ -229,6 +249,7 @@ export function useQuizState() {
       },
       { broadcast }
     );
+    if (runId !== runIdRef.current) return; // run was cut short while saving
     dispatch({ type: "SET_RANK", rank, totalPlayers });
     dispatch({ type: "FINISH_QUIZ" });
   }, [clientId, state.answerHistory.length, state.questions.length, state.score, state.playerName, state.correctAnswers]);
@@ -277,6 +298,7 @@ export function useQuizState() {
     finishQuiz,
     goToLeaderboard,
     goToStart,
+    abandonRun,
     goToEditor,
     goToActivity,
     playAgain,

@@ -57,7 +57,7 @@ function removeItem(key: string): void {
  * mark across restarts.
  */
 export function initVisitSession(): void {
-  let param: string | null = null;
+  let param: string | null;
   try {
     param = new URLSearchParams(window.location.search).get("kiosk");
   } catch {
