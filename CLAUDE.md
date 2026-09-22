@@ -100,7 +100,14 @@ zavře zrcadlení (`applyMirrorStop` → `forceExitMirror`, stejná cesta jako E
 Umlčení ruší až `join`/`claim`, takže nová hra se zase zrcadlí — kick není ban.
 
 Stop je ostřejší: navíc pošle `player_stopped` a tablet se do sekundy vrátí na
-úvodní obrazovku s vysvětlující hláškou. **Stav „stopped" nesmí být jen událost** —
+úvodní obrazovku s vysvětlující hláškou. Výsledek se nezobrazí, ale **skóre už
+odeslané** (stop padl přesně do dokončování) v DB zůstane — odeslaný požadavek
+vzít zpět nelze, jde jen smazat záznam ze žebříčku.
+
+`player_stopped` odchází **před** `queue_state`: queue_state říká tabletu, že už
+nedrží slot, a spojení, které umře mezi oběma rámci, by ho nechalo hrát dál.
+Heartbeat navíc běží, dokud trvá rozehraná hra (`useQueue(runInProgress)`), ne
+jen dokud tablet drží slot — jinak by se o stopu nikdy nedozvěděl. **Stav „stopped" nesmí být jen událost** —
 nese ho každá odpověď fronty (`result()`), takže tablet, který SSE zprávu
 propásl, se to dozví nejpozději z heartbeatu. Klient volá `abandonRun()`, které
 zvýší `runIdRef`, takže rozdělaný `saveScore` po dokončení nic nedispatchne ani

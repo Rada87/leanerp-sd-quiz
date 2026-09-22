@@ -179,8 +179,10 @@ export function useQuizState() {
   /**
    * Ends the current run without a result: the stand console stopping this
    * tablet, or the visitor's play time running out. Marks the score as
-   * handled so a pending save is discarded rather than landing on the
-   * leaderboard after the fact.
+   * handled and invalidates the run, so a save still in flight cannot drag
+   * the tablet back to the result screen when it resolves. The request
+   * itself cannot be recalled — a run that had already reached saveScore may
+   * still land on the leaderboard, and only deleting it there undoes that.
    */
   const abandonRun = useCallback(() => {
     runIdRef.current += 1;

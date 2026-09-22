@@ -9,6 +9,21 @@ async function loadQueue() {
   return { queue };
 }
 
+/**
+ * Records the order of frames written to the stream. queue.js caches its own
+ * import of events.js, so attach to that same instance.
+ */
+async function captureFrames() {
+  const events = await import("./events.js");
+  const frames = [];
+  const client = { write: (payload) => frames.push(payload) };
+  events.addClient(client);
+  return {
+    names: () => frames.map((f) => /event: (\w+)/.exec(f)?.[1]).filter(Boolean),
+    stop: () => events.removeClient(client),
+  };
+}
+
 test("kick frees the slot and promotes the next player", async () => {
   const { queue } = await loadQueue();
   queue.join("a", "Ann");
@@ -111,4 +126,38 @@ test("one player at a time: the second join waits", async () => {
   queue.leave("a");
   assert.equal(queue.getState("b").state, "ready");
   assert.equal(queue.claim("b").state, "active");
+});
+
+test("the frame that ends a run is sent before the one that frees the slot", async () => {
+  const { queue } = await loadQueue();
+  queue.join("a", "Ann");
+
+  const frames = await captureFrames();
+  queue.stopPlayer("a");
+  const names = frames.names();
+  frames.stop();
+
+  const stoppedAt = names.indexOf("player_stopped");
+  const queueAt = names.indexOf("queue_state");
+  assert.ok(stoppedAt >= 0, `expected a player_stopped frame, got ${names.join(", ")}`);
+  assert.ok(queueAt >= 0, `expected a queue_state frame, got ${names.join(", ")}`);
+  // A connection dying between the two must not be able to swallow the frame
+  // that tells the tablet to stop playing.
+  assert.ok(
+    stoppedAt < queueAt,
+    `player_stopped must precede queue_state, got ${names.join(", ")}`
+  );
+});
+
+test("a kick sends no player_stopped, so the run carries on", async () => {
+  const { queue } = await loadQueue();
+  queue.join("a", "Ann");
+
+  const frames = await captureFrames();
+  queue.kick("a");
+  const names = frames.names();
+  frames.stop();
+
+  assert.ok(!names.includes("player_stopped"), `kick must not end the run, got ${names.join(", ")}`);
+  assert.ok(names.includes("mirror_stop"), "the presentation still has to drop them");
 });

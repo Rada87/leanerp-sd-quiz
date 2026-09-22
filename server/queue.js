@@ -203,15 +203,21 @@ export function kick(clientId) {
  */
 export function stopPlayer(clientId) {
   const known = stateFor(clientId).state !== "idle";
-  drop(clientId);
-  promote();
-  if (known) publish();
   silence(clientId, true);
   dropProgressFor(clientId);
-  broadcast("mirror_stop", { clientId });
+
+  // Order matters. queue_state tells the tablet it no longer holds a slot,
+  // and a connection that dies between the two frames would leave it playing
+  // on with no reason to ask again. The frame that ends the run therefore
+  // goes first, so it cannot be the one that gets lost.
   // Only a client the queue actually knew is told to end its run: a stale or
   // double click must not knock an unrelated tablet off its screen.
   if (known) broadcast("player_stopped", { clientId });
+  broadcast("mirror_stop", { clientId });
+
+  drop(clientId);
+  promote();
+  if (known) publish();
   return { stopped: known, ...adminSnapshot() };
 }
 

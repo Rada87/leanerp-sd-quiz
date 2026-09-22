@@ -46,7 +46,10 @@ initVisitSession();
 
 function AppContent() {
   const quiz = useQuizState();
-  const queue = useQueue();
+  const quizRunning = quiz.screen === "quiz";
+  // Keep the heartbeat going for as long as a run is on, even once the slot
+  // has been handed back, so a stopped tablet always hears about it.
+  const queue = useQueue(quizRunning);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadedQuestions, setLoadedQuestions] = useState<Question[]>([]);
   const [pendingName, setPendingName] = useState("");

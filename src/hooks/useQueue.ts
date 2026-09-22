@@ -71,17 +71,29 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
  * server is unreachable, and callers treat that as "just let them play" —
  * a queue outage must never lock players out of the quiz.
  */
-export function useQueue() {
+/**
+ * @param runInProgress whether a quiz is actually being played right now.
+ *   Holding a queue slot and having a run going are different things: the
+ *   stand console frees the slot first, and a tablet that stopped sending
+ *   heartbeats at that moment would never learn its run was stopped if the
+ *   live frame went missing. Heartbeats continue while a run is on.
+ */
+export function useQueue(runInProgress = false) {
   const clientId = getClientId();
   const [snapshot, setSnapshot] = useState<QueueSnapshot>(emptySnapshot);
   // Bumped when the stand console ends this tablet's run, so the app can
   // react once per signal rather than watching a boolean.
   const [stopSignal, setStopSignal] = useState(0);
   const stateRef = useRef<QueueState>("idle");
+  const runRef = useRef(runInProgress);
 
   useEffect(() => {
     stateRef.current = snapshot.state;
   }, [snapshot.state]);
+
+  useEffect(() => {
+    runRef.current = runInProgress;
+  }, [runInProgress]);
 
   // One place where a stop is acted on, whichever transport delivered it.
   const noteStopped = useCallback(() => {
@@ -171,7 +183,7 @@ export function useQueue() {
   // Keep our slot alive while we hold one.
   useEffect(() => {
     const timer = setInterval(() => {
-      if (stateRef.current === "idle") return;
+      if (stateRef.current === "idle" && !runRef.current) return;
       post("/queue/heartbeat", { clientId }).then((next) => {
         if (!next) return;
         if (next.stopped) {
