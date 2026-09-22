@@ -53,6 +53,7 @@ function AppContent() {
   const clientId = getClientId();
   const adminUnlocked = useAdminUnlocked();
   const [visitBlocked, setVisitBlocked] = useState(isVisitBlocked);
+  const [stoppedNotice, setStoppedNotice] = useState(false);
   const lastQueueStateKey = useRef("");
   const isQueued = queue.snapshot.state === "waiting" || queue.snapshot.state === "ready";
 
@@ -89,6 +90,17 @@ function AppContent() {
       waitingCount: queue.snapshot.waitingCount,
     });
   }, [queue.snapshot.state, queue.snapshot.position, queue.snapshot.waitingCount]);
+
+  // The stand console ended this run: drop back to the start screen and say
+  // why, so the tablet does not look like it crashed mid-question.
+  useEffect(() => {
+    if (queue.stopSignal === 0) return;
+    logActivity("run_stopped_by_staff", { screen: quiz.screen });
+    quiz.goToStart();
+    setStoppedNotice(true);
+    const timer = setTimeout(() => setStoppedNotice(false), 12000);
+    return () => clearTimeout(timer);
+  }, [queue.stopSignal]);
 
   // The play-time limit cuts in the moment it expires, mid-question included,
   // so a visitor cannot stretch the session by staying inside one long run.
@@ -265,6 +277,37 @@ function AppContent() {
       style={{ minHeight: "100dvh" }}
     >
       <BackgroundPattern />
+
+      <AnimatePresence>
+        {stoppedNotice && (
+          <motion.div
+            key="stopped-notice"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            onClick={() => setStoppedNotice(false)}
+            style={{
+              position: "fixed",
+              top: 16,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 60,
+              maxWidth: "min(92vw, 420px)",
+              padding: "12px 18px",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-primary)",
+              color: "var(--color-text)",
+              fontSize: "0.88rem",
+              textAlign: "center",
+              boxShadow: "0 12px 32px rgba(0,0,0,0.5)",
+              cursor: "pointer",
+            }}
+          >
+            Your game was ended by the stand team. Tap Start Quiz to play again.
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <button
         onClick={() => setSettingsOpen((isOpen) => {

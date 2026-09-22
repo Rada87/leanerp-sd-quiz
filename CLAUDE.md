@@ -88,9 +88,15 @@ jinak by neautorizované „clear" tiše smazalo lokální kopii místo odmítnu
 žádný build) — schválně, aby při potížích s aplikací šla pořád otevřít a uvolnit
 frontu. Po zadání admin hesla ukazuje živou frontu a umí vykopnout jednotlivce
 (`POST /api/admin/queue/kick`) nebo ji celou vyprázdnit
-(`POST /api/admin/queue/clear`); obojí je za `requireAdmin`. Kick uvolní slot
-a povýší dalšího, ale **rozehranou hru na tom tabletu nezastaví** — kvíz o frontě
-nic neví a nikdy na ni nečeká.
+(`POST /api/admin/queue/clear`) nebo zastavit rozehranou hru
+(`POST /api/admin/queue/stop`); vše je za `requireAdmin`.
+
+Kick jen uvolní slot — rozehraná hra na tabletu běží dál, protože kvíz o frontě
+nic neví a nikdy na ni nečeká. Stop je ostřejší: server pošle SSE událost
+`player_stopped` s `clientId` a tablet se do sekundy vrátí na úvodní obrazovku
+s vysvětlující hláškou, skóre se neuloží. Kvíz tu událost slyší, protože už
+`EventSource` drží kvůli pozicím ve frontě (`src/hooks/useQueue.ts`) — proto
+neplatí doslova, že „kvíz jen odesílá".
 
 **Časový limit návštěvnického zařízení.** `src/utils/visitSession.ts`: od prvního
 spuštění hry běží `VISIT_TIME_LIMIT_MS` (15 min), po vypršení se **okamžitě**

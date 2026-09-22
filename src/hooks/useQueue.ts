@@ -72,6 +72,9 @@ async function post(path: string, body: Record<string, unknown>): Promise<QueueS
 export function useQueue() {
   const clientId = getClientId();
   const [snapshot, setSnapshot] = useState<QueueSnapshot>(emptySnapshot);
+  // Bumped when the stand console ends this tablet's run, so the app can
+  // react once per signal rather than watching a boolean.
+  const [stopSignal, setStopSignal] = useState(0);
   const stateRef = useRef<QueueState>("idle");
 
   useEffect(() => {
@@ -137,9 +140,23 @@ export function useQueue() {
         // ignore malformed frames
       }
     };
+    const onPlayerStopped = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data?.clientId !== clientId) return;
+        console.log(`${LOG} run ended by the stand console.`);
+        stateRef.current = "idle";
+        setSnapshot(emptySnapshot);
+        setStopSignal((n) => n + 1);
+      } catch {
+        // ignore malformed frames
+      }
+    };
     source.addEventListener("queue_state", onQueueState as EventListener);
+    source.addEventListener("player_stopped", onPlayerStopped as EventListener);
     return () => {
       source.removeEventListener("queue_state", onQueueState as EventListener);
+      source.removeEventListener("player_stopped", onPlayerStopped as EventListener);
       source.close();
     };
   }, [clientId]);
@@ -168,5 +185,5 @@ export function useQueue() {
     return () => window.removeEventListener("pagehide", release);
   }, [clientId]);
 
-  return { snapshot, join, claim, leave };
+  return { snapshot, join, claim, leave, stopSignal };
 }

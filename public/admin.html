@@ -64,6 +64,7 @@
       .tag--waiting { background: var(--color-border, #1e1e1e); color: var(--color-text-muted, #888); }
       .empty { color: var(--color-text-muted, #888); font-size: .9rem; padding: 8px 0; }
       .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+      .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
       .note { font-size: .78rem; line-height: 1.6; color: var(--color-text-muted, #888); }
       .status { margin-top: 12px; font-size: .82rem; min-height: 1.2em; }
       .status.ok { color: var(--color-primary, #74D7CB); }
@@ -101,10 +102,12 @@
         </div>
         <div class="status" id="queue-status"></div>
         <p class="note">
-          Kicking frees the play slot straight away and moves the next person up.
-          A quiz already running on that tablet keeps going — it just stops
-          holding the slot. The queue also clears itself: an active player after
-          60&nbsp;s of silence, someone whose turn came up after 45&nbsp;s.
+          <strong>Kick</strong> frees the play slot and moves the next person up;
+          a quiz already running on that tablet keeps going, it just stops holding
+          the slot. <strong>Stop game</strong> also ends the run — the tablet drops
+          back to the start screen within a second and the score is not saved.
+          The queue clears itself too: an active player after 60&nbsp;s of silence,
+          someone whose turn came up after 45&nbsp;s.
         </p>
       </section>
 
@@ -152,11 +155,17 @@
       function personRow(entry, kind, label) {
         const quiet = entry.quietSeconds === null ? "" : " · quiet " + entry.quietSeconds + "s";
         const ready = kind === "ready" ? " · waiting to start " + entry.readySeconds + "s" : "";
+        // Only the person actually playing has a run to stop.
+        const stop =
+          kind === "active"
+            ? '<button class="danger" data-stop="' + esc(entry.clientId) + '">Stop game</button>'
+            : "";
         return (
           '<div class="row"><div class="who">' +
           '<div class="name"><span class="tag tag--' + kind + '">' + label + "</span>" + esc(entry.playerName) + "</div>" +
           '<div class="meta">' + esc(entry.clientId) + quiet + ready + "</div></div>" +
-          '<button class="danger" data-kick="' + esc(entry.clientId) + '">Kick</button></div>'
+          '<div class="buttons">' + stop +
+          '<button class="danger" data-kick="' + esc(entry.clientId) + '">Kick</button></div></div>'
         );
       }
 
@@ -169,6 +178,9 @@
 
         el("queue-list").querySelectorAll("[data-kick]").forEach((button) => {
           button.addEventListener("click", () => kick(button.getAttribute("data-kick")));
+        });
+        el("queue-list").querySelectorAll("[data-stop]").forEach((button) => {
+          button.addEventListener("click", () => stopGame(button.getAttribute("data-stop")));
         });
       }
 
@@ -185,6 +197,17 @@
           const state = await call("/admin/queue/kick", { method: "POST", body: JSON.stringify({ clientId }) });
           render(state);
           flash(el("queue-status"), state.removed ? "Player removed." : "That player was already gone.", true);
+        } catch (error) {
+          flash(el("queue-status"), error.message, false);
+        }
+      }
+
+      async function stopGame(clientId) {
+        if (!window.confirm("End the game running on that tablet? The player loses the current run.")) return;
+        try {
+          const state = await call("/admin/queue/stop", { method: "POST", body: JSON.stringify({ clientId }) });
+          render(state);
+          flash(el("queue-status"), "Game stopped — that tablet is back at the start screen.", true);
         } catch (error) {
           flash(el("queue-status"), error.message, false);
         }

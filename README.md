@@ -36,9 +36,10 @@ vypnuté (server na ně vrací 503) a kvíz běží dál. Hraní heslo nikdy nev
 ## Konzole obsluhy
 
 `…/apps/leanerp-sd-quiz/admin.html` — samostatná stránka za admin heslem. Ukazuje
-živou frontu (kdo hraje, kdo čeká, jak dlouho mlčí) a umí jednotlivce vykopnout
-nebo frontu celou vyprázdnit. Vykopnutí uvolní slot a posune dalšího; hra, která
-už na tabletu běží, doběhne.
+živou frontu (kdo hraje, kdo čeká, jak dlouho mlčí) a umí jednotlivce vykopnout,
+frontu celou vyprázdnit, nebo zastavit rozehranou hru. Vykopnutí uvolní slot
+a posune dalšího; hra, která už na tabletu běží, doběhne. Zastavení hru ukončí —
+tablet se do sekundy vrátí na úvodní obrazovku a skóre se neuloží.
 
 ## Časový limit pro návštěvníky
 

@@ -149,6 +149,22 @@ export function kick(clientId) {
   return { removed: known, ...adminSnapshot() };
 }
 
+/**
+ * Ends the run on one tablet: the client listens for this on the same event
+ * stream it already uses for queue positions, so the quiz stops within a
+ * second rather than at the next heartbeat. Harsher than a kick — it takes
+ * the question away from whoever is holding the tablet — so the console keeps
+ * it as a separate button.
+ */
+export function stopPlayer(clientId) {
+  const known = stateFor(clientId).state !== "idle";
+  drop(clientId);
+  promote();
+  publish();
+  broadcast("player_stopped", { clientId });
+  return { stopped: known, ...adminSnapshot() };
+}
+
 /** Clears the whole queue — the reset between sessions or after a jam. */
 export function clearAll() {
   const had = !!active || !!ready || waiting.length > 0;

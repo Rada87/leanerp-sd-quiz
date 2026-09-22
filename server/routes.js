@@ -155,6 +155,14 @@ router.post("/admin/queue/kick", requireAdmin, (req, res) => {
   res.json(queue.kick(clientId));
 });
 
+router.post("/admin/queue/stop", requireAdmin, (req, res) => {
+  const clientId = req.body?.clientId;
+  if (typeof clientId !== "string" || clientId.length === 0) {
+    return res.status(400).json({ error: "clientId required" });
+  }
+  res.json(queue.stopPlayer(clientId));
+});
+
 router.post("/admin/queue/clear", requireAdmin, (_req, res) => {
   res.json(queue.clearAll());
 });
