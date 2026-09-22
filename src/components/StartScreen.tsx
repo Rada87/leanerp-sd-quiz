@@ -7,10 +7,19 @@ interface StartScreenProps {
 
 export function StartScreen({ onStart }: StartScreenProps) {
   const [name, setName] = useState("");
+  const [showHint, setShowHint] = useState(false);
+
+  // A name is required: a leaderboard of "Guest" entries tells the stand
+  // nothing, and nobody can find their own result on the big screen.
+  const trimmedName = name.trim();
+  const canStart = trimmedName.length > 0;
 
   const handleStart = () => {
-    const trimmedName = name.trim();
-    onStart(trimmedName || "Guest", trimmedName.length > 0);
+    if (!canStart) {
+      setShowHint(true);
+      return;
+    }
+    onStart(trimmedName, true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -152,13 +161,17 @@ export function StartScreen({ onStart }: StartScreenProps) {
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (showHint) setShowHint(false);
+            }}
             onKeyDown={handleKeyDown}
-            placeholder="Your name (optional)"
+            placeholder="Your name"
+            aria-label="Your name"
             maxLength={30}
             style={{
               background: "var(--color-bg)",
-              border: "2px solid var(--color-border)",
+              border: `2px solid ${showHint ? "var(--color-error)" : "var(--color-border)"}`,
               borderRadius: "var(--radius-md)",
               color: "var(--color-text)",
               fontSize: "1.1rem",
@@ -167,18 +180,37 @@ export function StartScreen({ onStart }: StartScreenProps) {
               transition: "border-color 0.2s",
             }}
             onFocus={(e) =>
-              (e.target.style.borderColor = "var(--color-primary-dark)")
+              (e.target.style.borderColor = showHint
+                ? "var(--color-error)"
+                : "var(--color-primary-dark)")
             }
             onBlur={(e) =>
-              (e.target.style.borderColor = "var(--color-border)")
+              (e.target.style.borderColor = showHint
+                ? "var(--color-error)"
+                : "var(--color-border)")
             }
           />
+
+          {showHint && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                fontSize: "0.9rem",
+                color: "var(--color-error)",
+                marginTop: -8,
+              }}
+            >
+              Please enter your name to play.
+            </motion.div>
+          )}
 
           <motion.button
             className="btn-primary"
             onClick={handleStart}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={canStart ? { scale: 1.03 } : undefined}
+            whileTap={canStart ? { scale: 0.97 } : undefined}
+            style={canStart ? undefined : { opacity: 0.5 }}
           >
             Start Quiz
           </motion.button>
