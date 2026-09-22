@@ -33,6 +33,13 @@ Heslo se nastavuje proměnnou `ADMIN_PASSWORD` v `.env` (viz `.env.example`).
 Výchozí heslo neexistuje: bez nastavené proměnné zůstanou údržbové akce
 vypnuté (server na ně vrací 503) a kvíz běží dál. Hraní heslo nikdy nevyžaduje.
 
+## Konzole obsluhy
+
+`…/apps/leanerp-sd-quiz/admin.html` — samostatná stránka za admin heslem. Ukazuje
+živou frontu (kdo hraje, kdo čeká, jak dlouho mlčí) a umí jednotlivce vykopnout
+nebo frontu celou vyprázdnit. Vykopnutí uvolní slot a posune dalšího; hra, která
+už na tabletu běží, doběhne.
+
 ## Časový limit pro návštěvníky
 
 Zařízení návštěvníka může hrát 15 minut od prvního spuštění kvízu

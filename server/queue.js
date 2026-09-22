@@ -110,6 +110,55 @@ export function getState(clientId) {
   return result(clientId);
 }
 
+/** Full queue for the admin page, including how long each entry has been quiet. */
+export function adminSnapshot() {
+  const t = now();
+  const age = (entry) => (entry ? Math.round((t - entry.lastSeen) / 1000) : null);
+  return {
+    active: active
+      ? { clientId: active.clientId, playerName: active.playerName, quietSeconds: age(active) }
+      : null,
+    ready: ready
+      ? {
+          clientId: ready.clientId,
+          playerName: ready.playerName,
+          quietSeconds: age(ready),
+          readySeconds: Math.round((t - ready.readyAt) / 1000),
+        }
+      : null,
+    waiting: waiting.map((w) => ({
+      clientId: w.clientId,
+      playerName: w.playerName,
+      quietSeconds: age(w),
+    })),
+    waitingCount: waiting.length + (ready ? 1 : 0),
+  };
+}
+
+/**
+ * Removes one person from the queue by hand, for the staff at the stand: a
+ * player who walked off mid-run holds the slot until the sweep notices, and
+ * waiting out that timeout with a queue of people watching is worse than
+ * letting someone take the slot back deliberately.
+ */
+export function kick(clientId) {
+  const known = stateFor(clientId).state !== "idle";
+  drop(clientId);
+  promote();
+  if (known) publish();
+  return { removed: known, ...adminSnapshot() };
+}
+
+/** Clears the whole queue — the reset between sessions or after a jam. */
+export function clearAll() {
+  const had = !!active || !!ready || waiting.length > 0;
+  active = null;
+  ready = null;
+  waiting = [];
+  if (had) publish();
+  return { cleared: had, ...adminSnapshot() };
+}
+
 function sweep() {
   const t = now();
   let changed = false;

@@ -1,0 +1,268 @@
+<!doctype html>
+<!--
+  Standalone stand console, served straight from public/ so it is plain HTML
+  with no build step and no dependency on the quiz bundle: if the React app
+  ever misbehaves during the event, this page still opens and can free the
+  queue. The password gate is the server's — nothing here works without a
+  token from /api/admin/session.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <title>LEAN ERP Quiz — Stand console</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+        background: var(--color-bg, #050505);
+        color: var(--color-text, #fff);
+        font-family: var(--font-sans, system-ui, sans-serif);
+        -webkit-text-size-adjust: 100%;
+      }
+      .wrap { max-width: 720px; margin: 0 auto; }
+      header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+      h1 { font-size: 1.25rem; font-weight: 800; margin: 0; }
+      .sub { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--color-text-muted, #888); }
+      .card {
+        background: var(--color-bg-card, #0e0e0e);
+        border: 1px solid var(--color-border, #1e1e1e);
+        border-radius: var(--radius-md, 16px);
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .card h2 { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-text-muted, #888); margin: 0 0 14px; font-weight: 700; }
+      input[type="password"] {
+        width: 100%; padding: 12px 14px; font-size: 1rem; font-family: inherit;
+        border-radius: var(--radius-sm, 8px); border: 1px solid var(--color-border, #1e1e1e);
+        background: var(--color-bg, #050505); color: var(--color-text, #fff);
+      }
+      button {
+        font-family: inherit; font-size: .9rem; font-weight: 600; cursor: pointer;
+        border-radius: var(--radius-sm, 8px); padding: 11px 16px; border: 1px solid var(--color-border, #1e1e1e);
+        background: var(--color-bg-card-hover, #181818); color: var(--color-text, #fff);
+      }
+      button:hover:not(:disabled) { border-color: var(--color-primary, #74D7CB); }
+      button:disabled { opacity: .45; cursor: default; }
+      button.primary { background: var(--color-primary, #74D7CB); color: var(--color-bg, #050505); border-color: transparent; }
+      button.danger { color: #ff8095; border-color: rgba(255, 77, 106, .45); background: rgba(255, 77, 106, .08); }
+      .row {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 12px 0; border-top: 1px solid var(--color-border, #1e1e1e); flex-wrap: wrap;
+      }
+      .row:first-of-type { border-top: 0; }
+      .who { min-width: 0; }
+      .name { font-weight: 700; font-size: 1rem; overflow-wrap: anywhere; }
+      .meta { font-size: .76rem; color: var(--color-text-muted, #888); margin-top: 3px; overflow-wrap: anywhere; }
+      .tag { display: inline-block; font-size: .64rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; margin-right: 8px; }
+      .tag--active { background: var(--color-primary, #74D7CB); color: var(--color-bg, #050505); }
+      .tag--ready { background: rgba(116, 215, 203, .18); color: var(--color-primary, #74D7CB); }
+      .tag--waiting { background: var(--color-border, #1e1e1e); color: var(--color-text-muted, #888); }
+      .empty { color: var(--color-text-muted, #888); font-size: .9rem; padding: 8px 0; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+      .note { font-size: .78rem; line-height: 1.6; color: var(--color-text-muted, #888); }
+      .status { margin-top: 12px; font-size: .82rem; min-height: 1.2em; }
+      .status.ok { color: var(--color-primary, #74D7CB); }
+      .status.err { color: #ff8095; }
+      .links { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+      .links a { color: var(--color-primary, #74D7CB); font-size: .82rem; text-decoration: none; border-bottom: 1px solid currentColor; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Stand console</h1>
+        <div class="sub">LEAN ERP Quiz</div>
+      </header>
+
+      <section class="card" id="login">
+        <h2>Sign in</h2>
+        <form id="login-form">
+          <input type="password" id="password" placeholder="Admin password" autocomplete="off" />
+          <div class="actions">
+            <button class="primary" type="submit" id="login-button">Unlock</button>
+          </div>
+        </form>
+        <div class="status err" id="login-status"></div>
+      </section>
+
+      <section class="card" id="queue-card" hidden>
+        <h2>Play queue</h2>
+        <div id="queue-list"></div>
+        <div class="actions">
+          <button id="refresh">Refresh</button>
+          <button class="danger" id="clear">Clear whole queue</button>
+          <button id="signout">Sign out</button>
+        </div>
+        <div class="status" id="queue-status"></div>
+        <p class="note">
+          Kicking frees the play slot straight away and moves the next person up.
+          A quiz already running on that tablet keeps going — it just stops
+          holding the slot. The queue also clears itself: an active player after
+          60&nbsp;s of silence, someone whose turn came up after 45&nbsp;s.
+        </p>
+      </section>
+
+      <section class="card" id="links-card" hidden>
+        <h2>Elsewhere</h2>
+        <div class="links">
+          <a href="./" target="_blank" rel="noopener">Quiz</a>
+          <a href="./#leaderboard" target="_blank" rel="noopener">Leaderboard</a>
+          <a href="./?kiosk=1" target="_blank" rel="noopener">Mark this device as kiosk</a>
+          <a href="/www/leanerp-skodadays-2026/" target="_blank" rel="noopener">Presentation</a>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const api = "api";
+      // Held in memory only, like everywhere else in this app: closing the tab
+      // signs the console out.
+      let token = null;
+      let timer = null;
+
+      const el = (id) => document.getElementById(id);
+      const esc = (value) =>
+        String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+      function flash(node, message, ok) {
+        node.textContent = message;
+        node.className = "status " + (ok ? "ok" : "err");
+        if (message) setTimeout(() => { if (node.textContent === message) node.textContent = ""; }, 4000);
+      }
+
+      async function call(path, options) {
+        const response = await fetch(api + path, {
+          ...options,
+          headers: { "Content-Type": "application/json", "x-admin-token": token, ...(options || {}).headers },
+        });
+        if (response.status === 401) {
+          signOut();
+          throw new Error("Session expired — sign in again");
+        }
+        if (!response.ok) throw new Error("Server returned " + response.status);
+        return response.json();
+      }
+
+      function personRow(entry, kind, label) {
+        const quiet = entry.quietSeconds === null ? "" : " · quiet " + entry.quietSeconds + "s";
+        const ready = kind === "ready" ? " · waiting to start " + entry.readySeconds + "s" : "";
+        return (
+          '<div class="row"><div class="who">' +
+          '<div class="name"><span class="tag tag--' + kind + '">' + label + "</span>" + esc(entry.playerName) + "</div>" +
+          '<div class="meta">' + esc(entry.clientId) + quiet + ready + "</div></div>" +
+          '<button class="danger" data-kick="' + esc(entry.clientId) + '">Kick</button></div>'
+        );
+      }
+
+      function render(state) {
+        const parts = [];
+        if (state.active) parts.push(personRow(state.active, "active", "Playing"));
+        if (state.ready) parts.push(personRow(state.ready, "ready", "Up next"));
+        state.waiting.forEach((entry, index) => parts.push(personRow(entry, "waiting", "In line " + (index + 1))));
+        el("queue-list").innerHTML = parts.length ? parts.join("") : '<div class="empty">Nobody in the queue.</div>';
+
+        el("queue-list").querySelectorAll("[data-kick]").forEach((button) => {
+          button.addEventListener("click", () => kick(button.getAttribute("data-kick")));
+        });
+      }
+
+      async function refresh() {
+        try {
+          render(await call("/admin/queue"));
+        } catch (error) {
+          flash(el("queue-status"), error.message, false);
+        }
+      }
+
+      async function kick(clientId) {
+        try {
+          const state = await call("/admin/queue/kick", { method: "POST", body: JSON.stringify({ clientId }) });
+          render(state);
+          flash(el("queue-status"), state.removed ? "Player removed." : "That player was already gone.", true);
+        } catch (error) {
+          flash(el("queue-status"), error.message, false);
+        }
+      }
+
+      el("clear").addEventListener("click", async () => {
+        if (!window.confirm("Remove everyone from the queue?")) return;
+        try {
+          const state = await call("/admin/queue/clear", { method: "POST" });
+          render(state);
+          flash(el("queue-status"), state.cleared ? "Queue cleared." : "Queue was already empty.", true);
+        } catch (error) {
+          flash(el("queue-status"), error.message, false);
+        }
+      });
+
+      el("refresh").addEventListener("click", refresh);
+      el("signout").addEventListener("click", () => signOut(true));
+
+      function signIn() {
+        el("login").hidden = true;
+        el("queue-card").hidden = false;
+        el("links-card").hidden = false;
+        refresh();
+        timer = setInterval(refresh, 3000);
+      }
+
+      function signOut(deliberate) {
+        if (timer) clearInterval(timer);
+        timer = null;
+        if (token && deliberate) {
+          fetch(api + "/admin/session", { method: "DELETE", headers: { "x-admin-token": token } }).catch(() => {});
+        }
+        token = null;
+        el("queue-card").hidden = true;
+        el("links-card").hidden = true;
+        el("login").hidden = false;
+        el("password").value = "";
+        if (!deliberate) flash(el("login-status"), "Session expired — sign in again", false);
+      }
+
+      el("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const password = el("password").value;
+        if (!password) return;
+        el("login-button").disabled = true;
+        try {
+          const response = await fetch(api + "/admin/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+          });
+          if (response.status === 401) throw new Error("Wrong password.");
+          if (response.status === 429) throw new Error("Too many attempts. Wait a few minutes.");
+          if (response.status === 503) throw new Error("No admin password set on the server.");
+          if (!response.ok) throw new Error("Server returned " + response.status);
+          const data = await response.json();
+          token = data.token;
+          el("login-status").textContent = "";
+          signIn();
+        } catch (error) {
+          flash(el("login-status"), error.message, false);
+        } finally {
+          el("login-button").disabled = false;
+        }
+      });
+
+      // Stop polling while the tab is in the background; pick it up on return.
+      document.addEventListener("visibilitychange", () => {
+        if (!token) return;
+        if (document.visibilityState === "visible") {
+          refresh();
+          if (!timer) timer = setInterval(refresh, 3000);
+        } else if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      });
+    </script>
+  </body>
+</html>
